@@ -1,0 +1,39 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+      "major": 3,
+      "minor": 16,
+      "patch": 0
+    },
+    "configurePresets": [
+      {
+        "name": "debug",
+        "displayName": "Debug Build",
+        "description": "Use LLVM-MinGW with Debug configuration",
+        "generator": "Ninja",
+        "binaryDir": "${sourceDir}/build/debug",
+        "toolchainFile": "D:/Qt/Tools/llvm-mingw/share/cmake/mingw.toolchain.cmake",
+        "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_PREFIX_PATH": "D:/Qt/6.8.0/llvm-mingw",
+          "CMAKE_C_COMPILER": "clang",
+          "CMAKE_CXX_COMPILER": "clang++"
+        }
+      },
+      {
+        "name": "release",
+        "displayName": "Release Build",
+        "description": "Use LLVM-MinGW with Release configuration",
+        "generator": "Ninja",
+        "binaryDir": "${sourceDir}/build/release",
+        "toolchainFile": "D:/Qt/Tools/llvm-mingw/share/cmake/mingw.toolchain.cmake",
+        "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "Release",
+          "CMAKE_PREFIX_PATH": "D:/Qt/6.8.0/llvm-mingw",
+          "CMAKE_C_COMPILER": "clang",
+          "CMAKE_CXX_COMPILER": "clang++"
+        }
+      }
+    ]
+  }
+  
