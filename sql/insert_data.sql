@@ -44,11 +44,14 @@ VALUES
     ('Channel 8', 'PMT', 563, 100);
 
 -- 添加测试数据到 Settings 表
-INSERT INTO CytometerSettings (parent_type, parent_id, threshold_op)
-VALUES
-    ('Experiment', 1, 'OR'),
-    ('Specimen', 1, 'AND'),
-    ('Tube', 1, 'OR');
+INSERT INTO CytometerSettings (parent_type, experiment_id, threshold_op)
+VALUES ('Experiment', 1, 'OR');
+
+INSERT INTO CytometerSettings (parent_type, specimen_id, threshold_op)
+VALUES  ('Specimen', 1, 'AND');
+
+INSERT INTO CytometerSettings (parent_type, tube_id, threshold_op)
+VALUES ('Tube', 1, 'OR');
 
 -- 添加测试数据到 ChannelSettings 表
 INSERT INTO DetectorSettings (setting_id, detector_id, parameter_name, detector_gain, detector_offset, enable_height, enable_width, enable_area)

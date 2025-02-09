@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>resource/images/nezha.jpg</file>
+    </qresource>
+</RCC>

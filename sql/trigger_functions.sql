@@ -39,14 +39,27 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION after_experiment_insert_function()
+CREATE OR REPLACE FUNCTION after_experiment_insert_function() 
 RETURNS TRIGGER AS $$
+DECLARE
+    parentNodeId INT;
 BEGIN
-    INSERT INTO BrowserData (parent_id, node_name, node_type, node_id, depth)
-    VALUES (NEW.user_id, NEW.experiment_name, 'Experiment', NEW.experiment_id, 2);
+    SELECT id INTO parentNodeId
+    FROM BrowserData
+    WHERE node_type = 'User' AND node_id = NEW.user_id
+    LIMIT 1;
+
+    IF parentNodeId IS NULL THEN
+        RAISE EXCEPTION 'Parent User node not found in BrowserData for user_id %', NEW.user_id;
+    END IF;
+
+    INSERT INTO BrowserData (parent_id, node_name, node_type, node_id, depth) 
+    VALUES (parentNodeId, NEW.experiment_name, 'Experiment', NEW.experiment_id, 2);
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
 
 CREATE OR REPLACE FUNCTION after_experiment_update_function()
 RETURNS TRIGGER AS $$
@@ -79,9 +92,21 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION after_specimen_insert_function()
 RETURNS TRIGGER AS $$
+DECLARE
+    parentNodeId INT;
 BEGIN
-    INSERT INTO BrowserData (parent_id, node_name, node_type, node_id, depth)
-    VALUES (NEW.experiment_id, NEW.specimen_name, 'Specimen', NEW.specimen_id, 3);
+    SELECT id INTO parentNodeId
+    FROM BrowserData
+    WHERE node_type = 'Experiment' AND node_id = NEW.experiment_id
+    LIMIT 1;
+
+    IF parentNodeId IS NULL THEN
+        RAISE EXCEPTION 'Parent Experiment node not found in BrowserData for experiment_id %', NEW.experiment_id;
+    END IF;
+
+    INSERT INTO BrowserData (parent_id, node_name, node_type, node_id, depth) 
+    VALUES (parentNodeId, NEW.specimen_name, 'Specimen', NEW.specimen_id, 3);
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -117,9 +142,21 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION after_tube_insert_function()
 RETURNS TRIGGER AS $$
+DECLARE
+    parentNodeId INT;
 BEGIN
-    INSERT INTO BrowserData (parent_id, node_name, node_type, node_id, depth)
-    VALUES (NEW.specimen_id, NEW.tube_name, 'Tube', NEW.tube_id, 4);
+    SELECT id INTO parentNodeId
+    FROM BrowserData
+    WHERE node_type = 'Specimen' AND node_id = NEW.specimen_id
+    LIMIT 1;
+
+    IF parentNodeId IS NULL THEN
+        RAISE EXCEPTION 'Parent Specimen node not found in BrowserData for specimen_id %', NEW.specimen_id;
+    END IF;
+
+    INSERT INTO BrowserData (parent_id, node_name, node_type, node_id, depth) 
+    VALUES (parentNodeId, NEW.tube_name, 'Tube', NEW.tube_id, 4);
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -162,16 +199,16 @@ BEGIN
     SELECT id INTO parentNodeId
     FROM BrowserData
     WHERE 
-        (NEW.parent_type = 'Experiment' AND node_type = 'Experiment' AND node_id = NEW.parent_id) OR
-        (NEW.parent_type = 'Specimen' AND node_type = 'Specimen' AND node_id = NEW.parent_id) OR
-        (NEW.parent_type = 'Tube' AND node_type = 'Tube' AND node_id = NEW.parent_id)
+        (NEW.parent_type = 'Experiment' AND node_type = 'Experiment' AND node_id = NEW.experiment_id) OR
+        (NEW.parent_type = 'Specimen' AND node_type = 'Specimen' AND node_id = NEW.specimen_id) OR
+        (NEW.parent_type = 'Tube' AND node_type = 'Tube' AND node_id = NEW.tube_id)
     LIMIT 1;
 
     INSERT INTO BrowserData (parent_id, node_name, node_type, node_id, depth, created_at)
     VALUES (
         parentNodeId,
         NEW.setting_name,
-        'Setting',
+        'Settings',
         NEW.setting_id,
         COALESCE((SELECT depth + 1 FROM BrowserData WHERE id = parentNodeId), 0),
         NOW()
@@ -188,7 +225,7 @@ BEGIN
     SET 
         node_name = NEW.setting_name,
         updated_at = NOW()
-    WHERE node_type = 'Setting' AND node_id = NEW.setting_id;
+    WHERE node_type = 'Settings' AND node_id = NEW.setting_id;
 
     RETURN NEW;
 END;
@@ -200,7 +237,7 @@ BEGIN
     WITH RECURSIVE NodesToDelete AS (
         SELECT id
         FROM BrowserData
-        WHERE node_type = 'Setting' AND node_id = OLD.setting_id
+        WHERE node_type = 'Settings' AND node_id = OLD.setting_id
         UNION ALL
         SELECT ts.id
         FROM BrowserData ts

@@ -2,7 +2,11 @@
 
 #include <QApplication>
 #include <QLocale>
+#include <QSplashScreen>
 #include <QTranslator>
+#include <QScreen>
+
+#include "LoginDialog.h"
 
 int main(int argc, char *argv[])
 {
@@ -21,7 +25,25 @@ int main(int argc, char *argv[])
             break;
         }
     }
-    MainWindow w;
-    w.show();
-    return a.exec();
+
+    QPixmap splashImg(":/resource/images/nezha.jpg");
+    QScreen *screen = QApplication::primaryScreen();
+    QSize screenSize = screen->availableGeometry().size();
+    QSize maxSize(screenSize.width() * 0.8, screenSize.height() * 0.8);
+    QPixmap scaledSplash = splashImg.scaled(maxSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
+    QSplashScreen splash(scaledSplash);
+    splash.show();
+    a.processEvents();
+
+    LoginDialog *login = new LoginDialog;
+    if (login->exec() == QDialog::Accepted) {
+        splash.showMessage(QObject::tr("Loading..."), Qt::AlignCenter, Qt::white);
+        MainWindow w;
+        w.show();
+        splash.finish(&w);
+        return a.exec();
+    } else {
+        return 0;
+    }
 }

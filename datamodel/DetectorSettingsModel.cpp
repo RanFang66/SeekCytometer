@@ -23,6 +23,9 @@ QVariant DetectorSettingsModel::data(const QModelIndex &index, int role) const
         return QVariant();
     }
 
+    if (role == Qt::TextAlignmentRole) {
+        return Qt::AlignCenter;
+    }
     const auto &settings = m_settingsList[index.row()];
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
         switch (index.column()) {
@@ -37,15 +40,16 @@ QVariant DetectorSettingsModel::data(const QModelIndex &index, int role) const
         case ThresholdValueColumn:  return settings.thresholdValue();
         default: return QVariant();
         }
-    } else if (role == Qt::CheckStateRole && index.column() == EnableHeightColumn) {
-        return (settings.isEnabledHeight() ? Qt::Checked : Qt::Unchecked);
-    } else if (role == Qt::CheckStateRole && index.column() == EnableWidthColumn) {
-        return (settings.isEnabledWidth() ? Qt::Checked : Qt::Unchecked);
-    } else if (role == Qt::CheckStateRole && index.column() == EnableAreaColumn) {
-        return (settings.isEenabledArea() ? Qt::Checked : Qt::Unchecked);
-    } else if (role == Qt::CheckStateRole && index.column() == EnableThresholdColumn) {
-        return (settings.isEnabledThreshold() ? Qt::Checked : Qt::Unchecked);
     }
+    // else if (role == Qt::CheckStateRole && index.column() == EnableHeightColumn) {
+    //     return (settings.isEnabledHeight() ? Qt::Checked : Qt::Unchecked);
+    // } else if (role == Qt::CheckStateRole && index.column() == EnableWidthColumn) {
+    //     return (settings.isEnabledWidth() ? Qt::Checked : Qt::Unchecked);
+    // } else if (role == Qt::CheckStateRole && index.column() == EnableAreaColumn) {
+    //     return (settings.isEenabledArea() ? Qt::Checked : Qt::Unchecked);
+    // } else if (role == Qt::CheckStateRole && index.column() == EnableThresholdColumn) {
+    //     return (settings.isEnabledThreshold() ? Qt::Checked : Qt::Unchecked);
+    // }
 
     return QVariant();
 }
@@ -86,7 +90,26 @@ bool DetectorSettingsModel::setData(const QModelIndex &index, const QVariant &va
         emit dataChanged(index, index);
         return true;
     }
+    // else if (role == Qt::CheckStateRole) {
+    //     switch(index.column()) {
+    //     case EnableHeightColumn:    settings.enableHeight(value.toBool()); break;
+    //     case EnableWidthColumn:     settings.enableWidth(value.toBool()); break;
+    //     case EnableAreaColumn:      settings.enableArea(value.toBool()); break;
+    //     case EnableThresholdColumn: settings.enableThreshold(value.toBool()); break;
+    //     default: return false;
+    //     }
+    //     emit dataChanged(index, index);
+    //     return true;
+    // }
     return false;
+}
+
+Qt::ItemFlags DetectorSettingsModel::flags(const QModelIndex &index) const
+{
+    if (!index.isValid()) {
+        return Qt::NoItemFlags;
+    }
+    return Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled;
 }
 
 void DetectorSettingsModel::initDetectorModel(int configId)

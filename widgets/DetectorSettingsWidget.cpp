@@ -3,9 +3,8 @@
 #include <QVBoxLayout>
 #include <QPushButton>
 #include <QHBoxLayout>
-
-#include <QDialog>
-
+#include "AddNewDetectorDialog.h"
+#include "CheckBoxDelegate.h"
 
 DetectorSettingsWidget::DetectorSettingsWidget(DetectorSettingsModel *model, QWidget *parent)
     : QWidget{parent}, m_dataModel{model}
@@ -16,10 +15,16 @@ DetectorSettingsWidget::DetectorSettingsWidget(DetectorSettingsModel *model, QWi
 void DetectorSettingsWidget::initWidget()
 {
     QTableView *tableView = new QTableView(this);
-    tableView->setEditTriggers(QAbstractItemView::DoubleClicked);
+    tableView->setEditTriggers(QAbstractItemView::AllEditTriggers);
 
 
     tableView->setModel(m_dataModel);
+
+    CheckBoxDelegate *delegate = new CheckBoxDelegate(tableView);
+    tableView->setItemDelegateForColumn(DetectorSettingsModel::EnableHeightColumn, delegate);
+    tableView->setItemDelegateForColumn(DetectorSettingsModel::EnableAreaColumn, delegate);
+    tableView->setItemDelegateForColumn(DetectorSettingsModel::EnableWidthColumn, delegate);
+    tableView->setItemDelegateForColumn(DetectorSettingsModel::EnableThresholdColumn, delegate);
 
     QPushButton *btnAdd = new QPushButton("Add", this);
     QPushButton *btnRemove = new QPushButton("Remove", this);
@@ -31,9 +36,7 @@ void DetectorSettingsWidget::initWidget()
     layout->addLayout(btnLayout);
     setLayout(layout);
 
-    connect(btnAdd, &QPushButton::clicked, this, [this](){
-        m_dataModel->addDetectorSettings(DetectorSettings(0, 0, "FSC", 100, 0, true, 0, true, false, false));
-    });
+    connect(btnAdd, &QPushButton::clicked, this, &DetectorSettingsWidget::onAddNewDetectorSetting);
     connect(btnRemove, &QPushButton::clicked, this, [this](){
         m_dataModel->removeDetectorSettings(0);
     });
@@ -41,6 +44,14 @@ void DetectorSettingsWidget::initWidget()
 
 void DetectorSettingsWidget::onAddNewDetectorSetting()
 {
-    QDialog *dlg = new QDialog(this);
-    QVBoxLayout *layout = new QVBoxLayout(dlg);
+    AddNewDetectorDialog *dlg = new AddNewDetectorDialog(this);
+    int ret = dlg->exec();
+    if (ret == QDialog::Accepted) {
+        QList<Detector> seletectedDetectors = dlg->getSelectedDetectors();
+        for (const Detector &detector : seletectedDetectors) {
+            m_dataModel->addDetectorSettings(DetectorSettings(0, detector.id(), detector.name()));
+        }
+    }
+
+    delete dlg;
 }

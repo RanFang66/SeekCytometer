@@ -3,8 +3,10 @@
 
 #include <QDockWidget>
 #include <QObject>
-#include "TreeModel.h"
 #include <QItemSelectionModel>
+#include <QStatusBar>
+#include <QTreeView>
+#include "BrowserDataModel.h"
 
 class ExperimentsBrowser : public QDockWidget
 {
@@ -13,26 +15,45 @@ public:
     explicit ExperimentsBrowser(const QString &title, QWidget *parent = nullptr);
     ~ExperimentsBrowser();
 
+    struct CurrentIndexPath {
+        QModelIndex currentUser;
+        QModelIndex currentExperiment;
+        QModelIndex currentSpecimen;
+        QModelIndex currentTube;
+        QModelIndex currentSettings;
+    };
+
 signals:
 
 private:
-    TreeModel *m_model;
+    BrowserDataModel *m_model;
     QItemSelectionModel *m_theSelection;
     QAction *addExperiment;
     QAction *addSpecimen;
     QAction *addTube;
     QAction *addSettings;
 
-    TreeNode *currentUser;
-    TreeNode *currentExperiment;
-    TreeNode *currentSpecimen;
-    TreeNode *currentTube;
-    TreeNode *currentSettings;
+    QTreeView *treeView;
+
+    QStatusBar *statusBar;
+    BrowserData *currentNode;
+    QList<BrowserData*> currentNodePath;
+
+    QModelIndex m_LoginUserIndex;
+    QList<QModelIndex> currentIndexPath;
+    CurrentIndexPath currentIndexList;
+    QString currentPathStr;
+
 
     void initDockWidget();
 
+    bool isNodeExists(NodeType nodeType, const QString &name, BrowserData *parentNode);
+
+    QModelIndex getParentForNewNode(NodeType nodeType);
+    void addNewNode(NodeType nodeType);
+
 private slots:
-    void onSelectionChanged(const QModelIndex &current, const QModelIndex &previous);
+    void onSelectionChanged(const QItemSelection &current, const QItemSelection &previous);
     void addNewExperiment(bool checked = false);
     void addNewSpecimen(bool checked = false);
     void addNewTube(bool checked = false);

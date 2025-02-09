@@ -11,12 +11,14 @@ public:
     explicit ExperimentsDAO(QObject *parent = nullptr);
 
     bool insertExperiment(const Experiment &experiment);
+    bool insertExperiment(const QString &name, int userId);
     bool updateExperiment(const Experiment &experiment);
     bool deleteExperiment(int experimentId);
     QList<Experiment> fetchExperiments() const;
     Experiment fetchExperiment(int experimentId) const;
-    bool isExperimentExists(const QString &name) const;
+    bool isExperimentExists(const QString &name, int userId) const;
     bool isExperimentExists(int experimentId) const;
+    int  fetchExperimentId(const QString &name, int userId);
 };
 
 #endif // EXPERIMENTSDAO_H

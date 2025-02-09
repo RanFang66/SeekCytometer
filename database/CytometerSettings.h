@@ -7,30 +7,27 @@
 #include <QString>
 
 #include "DetectorSettings.h"
+#include "NodeTypeHelper.h"
+
+
+enum class ThresholdType
+{
+    ThresholdOr,
+    ThresholdAnd,
+};
 
 class CytometerSettings
 {
 public:
-    enum class ParentType
-    {
-        Experiment,
-        Specimen,
-        Tube,
-    };
-
-    enum class ThresholdType
-    {
-        ThresholdSingle,
-        ThresholdOr,
-        ThresholdAnd,
-    };
-
-
     explicit CytometerSettings();
-    explicit CytometerSettings(int id, ParentType type, int parentId, ThresholdType thresholdType, QString name = "CytometerSettings");
+    explicit CytometerSettings(int id, NodeType type, int parentId, ThresholdType thresholdType, QString name = "CytometerSettings");
+
+    static QString thresholdTypeToString(ThresholdType type);
+    static ThresholdType stringToThresholdType(const QString &type);
+
     int id() const;
     QString name() const;
-    ParentType parentType() const;
+    NodeType parentType() const;
     int parentId() const;
     ThresholdType thresholdType() const;
 
@@ -42,7 +39,7 @@ public:
 
     void setId(int id);
     void setName(const QString &name);
-    void setParentType(ParentType parentType);
+    void setParentType(NodeType parentType);
     void setThresholdType(ThresholdType thresholdType);
 
 
@@ -50,7 +47,7 @@ public:
 private:
     int     m_id;
     QString m_name;
-    ParentType m_parentType;
+    NodeType m_parentType;
     int m_parentId;
     ThresholdType m_thresholdType;
     QMap<int, DetectorSettings> m_detectorSettings;
@@ -67,7 +64,7 @@ inline QString CytometerSettings::name() const
     return m_name;
 }
 
-inline CytometerSettings::ParentType CytometerSettings::parentType() const
+inline NodeType CytometerSettings::parentType() const
 {
     return m_parentType;
 }
@@ -77,7 +74,7 @@ inline int CytometerSettings::parentId() const
     return m_parentId;
 }
 
-inline CytometerSettings::ThresholdType CytometerSettings::thresholdType() const
+inline ThresholdType CytometerSettings::thresholdType() const
 {
     return m_thresholdType;
 }
@@ -112,7 +109,7 @@ inline void CytometerSettings::setName(const QString &name)
     m_name = name;
 }
 
-inline void CytometerSettings::setParentType(ParentType parentType)
+inline void CytometerSettings::setParentType(NodeType parentType)
 {
     m_parentType = parentType;
 }

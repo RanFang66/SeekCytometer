@@ -19,6 +19,20 @@ bool SpecimensDAO::insertSpecimen(const Specimen &specimen)
     return true;
 }
 
+bool SpecimensDAO::insertSpecimen(const QString &name, int experimentId)
+{
+    QSqlQuery query(m_db);
+    query.prepare("INSERT INTO Specimens (experiment_id, specimen_name) VALUES (:experiment_id, :specimen_name)");
+    query.bindValue(":experiment_id", experimentId);
+    query.bindValue(":specimen_name", name);
+
+    if (!query.exec()) {
+        handleError(__FUNCTION__, query);
+        return false;
+    }
+    return true;
+}
+
 bool SpecimensDAO::updateSpecimen(const Specimen &specimen)
 {
     QSqlQuery query(m_db);
@@ -88,11 +102,12 @@ Specimen SpecimensDAO::fetchSpecimen(int specimenId) const
     return specimen;
 }
 
-bool SpecimensDAO::isSpecimenExists(const QString &name) const
+bool SpecimensDAO::isSpecimenExists(const QString &name, int experimentId) const
 {
     QSqlQuery query(m_db);
-    query.prepare("SELECT * FROM Specimens WHERE specimen_name = :specimen_name");
+    query.prepare("SELECT * FROM Specimens WHERE specimen_name = :specimen_name AND experiment_id = :experiment_id");
     query.bindValue(":specimen_name", name);
+    query.bindValue(":experiment_id", experimentId);
 
     if (!query.exec()) {
         handleError(__FUNCTION__, query);

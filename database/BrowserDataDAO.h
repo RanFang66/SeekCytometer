@@ -3,7 +3,7 @@
 
 #include "BaseDAO.h"
 
-#include "TreeNode.h"
+#include "BrowserData.h"
 #include "User.h"
 
 
@@ -13,10 +13,13 @@ class BrowserDataDAO : public BaseDAO
 public:
     explicit BrowserDataDAO(QObject *parent = nullptr);
 
-    TreeNode *getBrowserData(const User &user);
+    BrowserData *getBrowserData(const User &user);
+
+    BrowserData* getNewNode(NodeType type, const QString &name, BrowserData* parent);
 
 private:
-    TreeNode *buildTree(const QList<QVariantMap> &treeData);
+    BrowserData *buildTree(const QList<QVariantMap> &treeData);
+    static const QString queryUserData;
 };
 
 #endif // BROWSERDATADAO_H

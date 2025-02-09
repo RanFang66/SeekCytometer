@@ -11,7 +11,8 @@ CREATE TABLE Users (
     user_name        VARCHAR(32) NOT NULL UNIQUE,
     user_admin       BOOLEAN NOT NULL,
     department       VARCHAR(32),
-    email            VARCHAR(64)
+    email            VARCHAR(64),
+    user_password    TEXT NOT NULL DEFAULT '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92' -- '123456'
 );
 
 
@@ -50,21 +51,43 @@ CREATE TYPE ParentType AS ENUM ('Experiment', 'Specimen', 'Tube');
 CREATE TYPE ThresholdOperator AS ENUM ('OR', 'AND');
 
 CREATE TABLE CytometerSettings (
-    setting_id       SERIAL PRIMARY KEY NOT NULL,
-    setting_name     VARCHAR(64) NOT NULL DEFAULT 'CytometerSettings',
-    parent_type     ParentType NOT NULL,
-    parent_id       INT NOT NULL,
-    threshold_op    ThresholdOperator NOT NULL DEFAULT 'OR',
+    setting_id          SERIAL PRIMARY KEY NOT NULL,
+    setting_name        VARCHAR(64) NOT NULL DEFAULT 'CytometerSettings',
+    parent_type         ParentType NOT NULL,
+    experiment_id       INT REFERENCES Experiments(experiment_id) ON DELETE CASCADE,
+    specimen_id         INT REFERENCES Specimens(specimen_id) ON DELETE CASCADE,
+    tube_id             INT REFERENCES Tubes(tube_id) ON DELETE CASCADE,
+    threshold_op        ThresholdOperator NOT NULL DEFAULT 'OR',
 
-    CONSTRAINT fk_parent_experiment FOREIGN KEY (parent_id) REFERENCES Experiments(experiment_id) ON DELETE CASCADE,
-    CONSTRAINT fk_parent_specimen FOREIGN KEY (parent_id) REFERENCES Specimens(specimen_id) ON DELETE CASCADE,
-    CONSTRAINT fk_parent_tube FOREIGN KEY (parent_id) REFERENCES Tubes(tube_id) ON DELETE CASCADE,
-    UNIQUE (parent_type, parent_id)
+    CHECK (
+        (parent_type = 'Experiment' AND experiment_id IS NOT NULL AND specimen_id IS NULL AND tube_id IS NULL) OR
+        (parent_type = 'Specimen' AND specimen_id IS NOT NULL AND experiment_id IS NULL AND tube_id IS NULL) OR
+        (parent_type = 'Tube' AND tube_id IS NOT NULL AND experiment_id IS NULL AND specimen_id IS NULL)
+    ),
+
+    UNIQUE (parent_type, experiment_id),
+    UNIQUE (parent_type, specimen_id),
+    UNIQUE (parent_type, tube_id)
 );
 
-CREATE INDEX idx_settings_parent ON CytometerSettings(parent_type, parent_id);
 
-CREATE TYPE NodeType AS ENUM ('User', 'Experiment', 'Specimen', 'Tube', 'Setting');
+
+-- CREATE TABLE CytometerSettings (
+--     setting_id          SERIAL PRIMARY KEY NOT NULL,
+--     setting_name        VARCHAR(64) NOT NULL DEFAULT 'CytometerSettings',
+--     parent_type         ParentType NOT NULL,
+--     parent_id           INT NOT NULL,
+--     threshold_op        ThresholdOperator NOT NULL DEFAULT 'OR',
+
+--     CONSTRAINT fk_parent_experiment FOREIGN KEY (parent_id) REFERENCES Experiments(experiment_id) ON DELETE CASCADE,
+--     CONSTRAINT fk_parent_specimen FOREIGN KEY (parent_id) REFERENCES Specimens(specimen_id) ON DELETE CASCADE,
+--     CONSTRAINT fk_parent_tube FOREIGN KEY (parent_id) REFERENCES Tubes(tube_id) ON DELETE CASCADE,
+--     UNIQUE (parent_type, parent_id)
+-- );
+
+-- CREATE INDEX idx_settings_parent ON CytometerSettings(parent_type, parent_id);
+
+CREATE TYPE NodeType AS ENUM ('User', 'Experiment', 'Specimen', 'Tube', 'Settings');
 CREATE TABLE BrowserData (
     id SERIAL PRIMARY KEY NOT NULL,
     parent_id INT,

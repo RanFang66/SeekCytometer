@@ -12,7 +12,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_PREFIX_PATH "D:/Qt/6.8.0/llvm-mingw_64")
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools Sql)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools Sql)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools Sql Network Charts)
+
+option(ENABLE_DEBUG_MODE "Enable debug mode" ON)
+if(ENABLE_DEBUG_MODE)
+    add_definitions(-DDEBUG_MODE)
+endif()
+
 
 set(TS_FILES SeekCytometer_zh_CN.ts)
 
@@ -23,14 +29,14 @@ set(PROJECT_SOURCES
         ${TS_FILES}
 )
 
-include_directories(datamodel database widgets)
+include_directories(network datamodel database widgets dialogs delegate)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(SeekCytometer
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        datamodel/TreeNode.h datamodel/TreeNode.cpp
-        datamodel/TreeModel.h datamodel/TreeModel.cpp
+
+
         database/DatabaseManager.h database/DatabaseManager.cpp
         database/User.h database/User.cpp
         database/Experiment.h database/Experiment.cpp
@@ -53,6 +59,18 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         database/UsersDAO.h database/UsersDAO.cpp
         database/CytometerSettingsDAO.h database/CytometerSettingsDAO.cpp
         database/BrowserDataDAO.h database/BrowserDataDAO.cpp
+        database/BrowserData.h database/BrowserData.cpp
+        datamodel/BrowserDataModel.h datamodel/BrowserDataModel.cpp
+        dialogs/AddNewItemDialog.h dialogs/AddNewItemDialog.cpp
+        dialogs/AddNewDetectorDialog.h dialogs/AddNewDetectorDialog.cpp
+        delegate/CheckBoxDelegate.h delegate/CheckBoxDelegate.cpp
+        dialogs/LoginDialog.h dialogs/LoginDialog.cpp
+        resource.qrc
+        widgets/CustomStatusBar.cpp widgets/CustomStatusBar.h
+        widgets/StatusIndicator.cpp widgets/StatusIndicator.h
+        network/NetworkClient.cpp network/NetworkClient.h network/NetworkFrame.cpp network/NetworkFrame.h
+        widgets/MenuBarManager.h widgets/MenuBarManager.cpp
+        database/NodeTypeHelper.h database/NodeTypeHelper.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET SeekCytometer APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -76,7 +94,7 @@ else()
     qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 endif()
 
-target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Sql)
+target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Sql Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Charts)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

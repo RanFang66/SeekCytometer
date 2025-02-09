@@ -19,11 +19,12 @@ public:
     explicit SpecimensDAO(QObject *parent = nullptr);
 
     bool insertSpecimen(const Specimen &specimen);
+    bool insertSpecimen(const QString &name, int experimentId);
     bool updateSpecimen(const Specimen &specimen);
     bool deleteSpecimen(int specimenId);
     QList<Specimen> fetchSpecimens() const;
     Specimen fetchSpecimen(int specimenId) const;
-    bool isSpecimenExists(const QString &name) const;
+    bool isSpecimenExists(const QString &name, int experimentId) const;
     bool isSpecimenExists(int specimenId) const;
 };
 

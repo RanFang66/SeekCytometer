@@ -18,6 +18,20 @@ bool ExperimentsDAO::insertExperiment(const Experiment &experiment)
     return true;
 }
 
+bool ExperimentsDAO::insertExperiment(const QString &name, int userId)
+{
+    QSqlQuery query(m_db);
+    query.prepare("INSERT INTO Experiments (user_id, experiment_name) VALUES (:user_id, :experiment_name)");
+    query.bindValue(":user_id", userId);
+    query.bindValue(":experiment_name", name);
+
+    if (!query.exec()) {
+        handleError(__FUNCTION__, query);
+        return false;
+    }
+    return true;
+}
+
 
 bool ExperimentsDAO::updateExperiment(const Experiment &experiment)
 {
@@ -94,11 +108,12 @@ Experiment ExperimentsDAO::fetchExperiment(int experimentId) const
 }
 
 
-bool ExperimentsDAO::isExperimentExists(const QString &name) const
+bool ExperimentsDAO::isExperimentExists(const QString &name, int userId) const
 {
     QSqlQuery query(m_db);
-    query.prepare("SELECT experiment_id FROM Experiments WHERE experiment_name = :experiment_name");
+    query.prepare("SELECT experiment_id FROM Experiments WHERE experiment_name = :experiment_name and user_id = :user_id");
     query.bindValue(":experiment_name", name);
+    query.bindValue(":user_id", userId);
 
     if (!query.exec()) {
         handleError(__FUNCTION__, query);
@@ -120,6 +135,25 @@ bool ExperimentsDAO::isExperimentExists(int experimentId) const
     }
 
     return query.next();
+}
+
+int ExperimentsDAO::fetchExperimentId(const QString &name, int userId)
+{
+    QSqlQuery query(m_db);
+    query.prepare("SELECT experiment_id FROM Experiments WHERE experiment_name = :experiment_name and user_id = :user_id");
+    query.bindValue(":experiment_name", name);
+    query.bindValue(":user_id", userId);
+
+    if (!query.exec()) {
+        handleError(__FUNCTION__, query);
+        return -1;
+    }
+
+    if (query.next()) {
+        return query.value("experiment_id").toInt();
+    }
+
+    return -1;
 }
 
 

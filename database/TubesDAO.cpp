@@ -12,12 +12,27 @@ TubesDAO::TubesDAO(QObject *parent)
 //     FOREIGN KEY (specimen_id) REFERENCES Specimens(specimen_id) ON DELETE CASCADE,
 //     UNIQUE (specimen_id, tube_name)
 //     );
+
 bool TubesDAO::insertTube(const Tube &tube)
 {
     QSqlQuery query(m_db);
     query.prepare("INSERT INTO Tubes (specimen_id, tube_name) VALUES (:specimen_id, :tube_name)");
     query.bindValue(":specimen_id", tube.specimenId());
     query.bindValue(":tube_name", tube.name());
+
+    if (!query.exec()) {
+        handleError(__FUNCTION__, query);
+        return false;
+    }
+    return true;
+}
+
+bool TubesDAO::insertTube(const QString &name, int specimenId)
+{
+    QSqlQuery query(m_db);
+    query.prepare("INSERT INTO Tubes (specimen_id, tube_name) VALUES (:specimen_id, :tube_name)");
+    query.bindValue(":specimen_id", specimenId);
+    query.bindValue(":tube_name", name);
 
     if (!query.exec()) {
         handleError(__FUNCTION__, query);
@@ -100,11 +115,35 @@ Tube TubesDAO::fetchTube(int tubeId) const
     return tube;
 }
 
-bool TubesDAO::isTubeExists(const QString &name) const
+Tube TubesDAO::fetchTube(int specimenId, const QString &name)
+{
+    Tube tube;
+
+    QSqlQuery query(m_db);
+    query.prepare("SELECT * FROM Tubes WHERE specimen_id = :specimen_id and tube_name = :tube_name");
+    query.bindValue(":specimen_id", specimenId);
+    query.bindValue(":tube_name", name);
+
+    if (!query.exec()) {
+        handleError(__FUNCTION__, query);
+        return tube;
+    }
+
+    if (query.next()) {
+        tube.setId(query.value("tube_id").toInt());
+        tube.setSpecimenId(query.value("specimen_id").toInt());
+        tube.setName(query.value("tube_name").toString());
+    }
+
+    return tube;
+}
+
+bool TubesDAO::isTubeExists(const QString &name, int specimenId) const
 {
     QSqlQuery query(m_db);
-    query.prepare("SELECT * FROM Tubes WHERE tube_name = :tube_name");
+    query.prepare("SELECT * FROM Tubes WHERE tube_name = :tube_name AND specimen_id = :specimen_id");
     query.bindValue(":tube_name", name);
+    query.bindValue(":specimen_id", specimenId);
 
     if (!query.exec()) {
         handleError(__FUNCTION__, query);

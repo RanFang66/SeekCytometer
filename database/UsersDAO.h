@@ -28,6 +28,8 @@ public:
     bool isUserAdmin(const QString &name) const;
     bool isUserExists(const QString &name) const;
     bool isUserExists(int userId) const;
+
+    int checkUserPassword(const QString &name, const QString &password) const;
 };
 
 #endif // USERSDAO_H

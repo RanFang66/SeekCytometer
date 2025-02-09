@@ -163,3 +163,22 @@ bool UsersDAO::isUserExists(int userId) const
     return query.next();
 }
 
+int UsersDAO::checkUserPassword(const QString &name, const QString &password) const
+{
+    QSqlQuery query(m_db);
+    query.prepare("SELECT * FROM Users WHERE user_name = :user_name AND user_password = :user_password");
+    query.bindValue(":user_name", name);
+    query.bindValue(":user_password", password);
+
+    if (!query.exec()) {
+        handleError(__FUNCTION__, query);
+        return false;
+    }
+
+    if (query.next()) {
+        return query.value("user_id").toInt();
+    } else {
+        return 0;
+    }
+}
+

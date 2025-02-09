@@ -11,11 +11,13 @@ public:
     explicit TubesDAO(QObject *parent = nullptr);
 
     bool insertTube(const Tube &tube);
+    bool insertTube(const QString &name, int specimenId);
     bool updateTube(const Tube &tube);
     bool deleteTube(int tubeId);
     QList<Tube> fetchTubes() const;
     Tube fetchTube(int tubeId) const;
-    bool isTubeExists(const QString &name) const;
+    Tube fetchTube(int specimenId, const QString &name);
+    bool isTubeExists(const QString &name, int specimenId) const;
     bool isTubeExists(int tubeId) const;
 };
 

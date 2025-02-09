@@ -19,6 +19,7 @@ private:
 
 private slots:
     void onAddNewDetectorSetting();
+
 };
 
 #endif // DETECTORSETTINGSWIDGET_H
