@@ -2,18 +2,28 @@
 #define DETECTORSETTINGS_H
 
 #include <QString>
-
+#include <QMetaType>
+#include "Detector.h"
+#include <QList>
+#include "MeasurementTypeHelper.h"
 
 class DetectorSettings
 {
 public:
-    explicit DetectorSettings();
-    explicit DetectorSettings(int configId, int detectorId, QString parameter, int detectorGain = 100, int detectorOffset = 0,
+    DetectorSettings();
+    explicit DetectorSettings(int settingId, int detectorId, QString parameter, int detectorGain = 100, int detectorOffset = 0,
                               bool enableThreshold = false, int thresholdValue = 0,
                               bool enableHeight = true, bool enableWidth = false, bool enableArea = false);
-    int configId() const;
+    explicit DetectorSettings(int settingId, const Detector &detector);
+
+    static QString measurementTypeToString(MeasurementType type);
+    static MeasurementType stringToMeasurementType(const QString &type);
+
+
+    int id() const;
+    int settingId() const;
     int detectorId() const;
-    QString parameter() const;
+    QString parameterName() const;
     int detectorGain() const;
     int detectorOffset() const;
     bool isEnabledThreshold() const;
@@ -22,10 +32,10 @@ public:
     bool isEnabledWidth() const;
     bool isEenabledArea() const;
 
-
-    void setConfigId(int configId);
+    void setId(int id);
+    void setSettingId(int settingId);
     void setDetectorId(int detectorId);
-    void setParameter(const QString &parameter);
+    void setParameterName(const QString &parameter);
     void setDetectorGain(int detectorGain);
     void setDetectorOffset(int detectorOffset);
     void enableThreshold(bool enableThreshold);
@@ -33,12 +43,14 @@ public:
     void enableHeight(bool enableHeight);
     void enableWidth(bool enableWidth);
     void enableArea(bool enableArea);
+    QList<MeasurementType> enabledMeasurementTypes() const;
 
 
 private:
-    int     m_configId;
+    int     m_id;
+    int     m_settingId;
     int     m_detectorId;
-    QString m_parameter;
+    QString m_parameterName;
     int     m_detectorGain;
     int     m_detectorOffset;
     bool    m_enableHeight;
@@ -48,14 +60,19 @@ private:
     int     m_thresholdValue;
 };
 
-inline int DetectorSettings::configId() const
+inline int DetectorSettings::id() const
 {
-    return m_configId;
+    return m_id;
 }
 
-inline void DetectorSettings::setConfigId(int configId)
+inline int DetectorSettings::settingId() const
 {
-    m_configId = configId;
+    return m_settingId;
+}
+
+inline void DetectorSettings::setSettingId(int configId)
+{
+    m_settingId = configId;
 }
 
 inline void DetectorSettings::setDetectorId(int detectorId)
@@ -68,9 +85,9 @@ inline int DetectorSettings::detectorId() const
     return m_detectorId;
 }
 
-inline QString DetectorSettings::parameter() const
+inline QString DetectorSettings::parameterName() const
 {
-    return m_parameter;
+    return m_parameterName;
 }
 
 inline int DetectorSettings::detectorGain() const
@@ -108,9 +125,14 @@ inline bool DetectorSettings::isEenabledArea() const
     return m_enableArea;
 }
 
-inline void DetectorSettings::setParameter(const QString &parameter)
+inline void DetectorSettings::setId(int id)
 {
-    m_parameter = parameter;
+    m_id = id;
+}
+
+inline void DetectorSettings::setParameterName(const QString &parameterName)
+{
+    m_parameterName = parameterName;
 }
 
 inline void DetectorSettings::setDetectorGain(int detectorGain)

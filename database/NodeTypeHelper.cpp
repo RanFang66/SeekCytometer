@@ -6,7 +6,9 @@ const std::unordered_map<QString, NodeType> NodeTypeHelper::stringToEnumMap = {
     {"Experiment", NodeType::Experiment},
     {"Specimen", NodeType::Specimen},
     {"Tube", NodeType::Tube},
-    {"Settings", NodeType::Settings}
+    {"Settings", NodeType::Settings},
+    {"Worksheet", NodeType::Worksheet},
+    {"Unknown", NodeType::Unknown}
 };
 
 const std::unordered_map<NodeType, QString> NodeTypeHelper::enumToStringMap = {
@@ -16,6 +18,7 @@ const std::unordered_map<NodeType, QString> NodeTypeHelper::enumToStringMap = {
     {NodeType::Specimen, "Specimen"},
     {NodeType::Tube, "Tube"},
     {NodeType::Settings, "Settings"},
+    {NodeType::Worksheet, "Worksheet"},
     {NodeType::Unknown, "Unknown"}
 };
 

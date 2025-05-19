@@ -5,32 +5,34 @@ SpecimensDAO::SpecimensDAO(QObject *parent)
 {}
 
 
-bool SpecimensDAO::insertSpecimen(const Specimen &specimen)
+int SpecimensDAO::insertSpecimen(const Specimen &specimen)
 {
     QSqlQuery query(m_db);
-    query.prepare("INSERT INTO Specimens (experiment_id, specimen_name) VALUES (:experiment_id, :specimen_name)");
+    query.prepare("INSERT INTO Specimens (experiment_id, specimen_name) VALUES (:experiment_id, :specimen_name) RETURNING specimen_id");
     query.bindValue(":experiment_id", specimen.experimentId());
     query.bindValue(":specimen_name", specimen.name());
 
-    if (!query.exec()) {
+    if (query.exec() && query.next()) {
+        return query.value(0).toInt();
+    } else {
         handleError(__FUNCTION__, query);
-        return false;
+        return 0;
     }
-    return true;
 }
 
-bool SpecimensDAO::insertSpecimen(const QString &name, int experimentId)
+int SpecimensDAO::insertSpecimen(const QString &name, int experimentId)
 {
     QSqlQuery query(m_db);
-    query.prepare("INSERT INTO Specimens (experiment_id, specimen_name) VALUES (:experiment_id, :specimen_name)");
+    query.prepare("INSERT INTO Specimens (experiment_id, specimen_name) VALUES (:experiment_id, :specimen_name) RETURNING specimen_id");
     query.bindValue(":experiment_id", experimentId);
     query.bindValue(":specimen_name", name);
 
-    if (!query.exec()) {
+    if (query.exec() && query.next()) {
+        return query.value(0).toInt();
+    } else {
         handleError(__FUNCTION__, query);
-        return false;
+        return 0;
     }
-    return true;
 }
 
 bool SpecimensDAO::updateSpecimen(const Specimen &specimen)

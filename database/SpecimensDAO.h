@@ -18,8 +18,8 @@ class SpecimensDAO : public BaseDAO
 public:
     explicit SpecimensDAO(QObject *parent = nullptr);
 
-    bool insertSpecimen(const Specimen &specimen);
-    bool insertSpecimen(const QString &name, int experimentId);
+    int insertSpecimen(const Specimen &specimen);
+    int insertSpecimen(const QString &name, int experimentId);
     bool updateSpecimen(const Specimen &specimen);
     bool deleteSpecimen(int specimenId);
     QList<Specimen> fetchSpecimens() const;

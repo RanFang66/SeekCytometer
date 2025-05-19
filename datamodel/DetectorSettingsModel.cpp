@@ -1,4 +1,5 @@
 #include "DetectorSettingsModel.h"
+#include "DetectorSettingsDAO.h"
 
 DetectorSettingsModel::DetectorSettingsModel(QObject *parent)
     : QAbstractTableModel{parent}
@@ -29,8 +30,8 @@ QVariant DetectorSettingsModel::data(const QModelIndex &index, int role) const
     const auto &settings = m_settingsList[index.row()];
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
         switch (index.column()) {
-        case DetectorIDColumn:      return settings.detectorId();
-        case ParameterColumn:       return settings.parameter();
+        case DetectorIDColumn:      return QString("Detector-%1").arg(settings.detectorId());
+        case ParameterColumn:       return settings.parameterName();
         case DetectorGainColumn:    return settings.detectorGain();
         case DetectorOffsetColumn:  return settings.detectorOffset();
         case EnableHeightColumn:    return settings.isEnabledHeight();
@@ -61,7 +62,7 @@ QVariant DetectorSettingsModel::headerData(int section, Qt::Orientation orientat
         if (orientation == Qt::Horizontal && section >= 0 && section < m_headerData.length()) {
             return m_headerData.at(section);
         } else if (orientation == Qt::Vertical && section >=0 && section < m_settingsList.length()) {
-            return tr("Detector-")+ QString::number(section);
+            return QString::number(section);
         }
     }
     return QVariant();
@@ -72,12 +73,12 @@ bool DetectorSettingsModel::setData(const QModelIndex &index, const QVariant &va
     if (!index.isValid() || index.row() >= rowCount() || index.column() >= columnCount()) {
         return false;
     }
-
+    QMutexLocker locker(&m_mutex);
     auto &settings = m_settingsList[index.row()];
     if (role == Qt::EditRole) {
         switch (index.column()) {
         case DetectorIDColumn:      return false;
-        case ParameterColumn:       settings.setParameter(value.toString()); break;
+        case ParameterColumn:       settings.setParameterName(value.toString()); break;
         case DetectorGainColumn:    settings.setDetectorGain(value.toInt()); break;
         case DetectorOffsetColumn:  settings.setDetectorOffset(value.toInt()); break;
         case EnableHeightColumn:    settings.enableHeight(value.toBool()); break;
@@ -87,20 +88,12 @@ bool DetectorSettingsModel::setData(const QModelIndex &index, const QVariant &va
         case ThresholdValueColumn:  settings.setThresholdValue(value.toInt()); break;
         default: return false;
         }
+
+        DetectorSettingsDAO().updateDetectorSettings(settings);
+
         emit dataChanged(index, index);
         return true;
     }
-    // else if (role == Qt::CheckStateRole) {
-    //     switch(index.column()) {
-    //     case EnableHeightColumn:    settings.enableHeight(value.toBool()); break;
-    //     case EnableWidthColumn:     settings.enableWidth(value.toBool()); break;
-    //     case EnableAreaColumn:      settings.enableArea(value.toBool()); break;
-    //     case EnableThresholdColumn: settings.enableThreshold(value.toBool()); break;
-    //     default: return false;
-    //     }
-    //     emit dataChanged(index, index);
-    //     return true;
-    // }
     return false;
 }
 
@@ -109,21 +102,34 @@ Qt::ItemFlags DetectorSettingsModel::flags(const QModelIndex &index) const
     if (!index.isValid()) {
         return Qt::NoItemFlags;
     }
+    if (index.column()==0) {
+        return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
+    }
     return Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled;
 }
 
-void DetectorSettingsModel::initDetectorModel(int configId)
+void DetectorSettingsModel::resetDetectorSettingModel(int settingId)
 {
+    QMutexLocker locker(&m_mutex);
     beginResetModel();
-    m_settingsList = m_detectorSettingsDAO.fetchDetectorSettings(configId);
+    m_settingsList = DetectorSettingsDAO().fetchDetectorSettings(settingId);
     endResetModel();
 }
 
 void DetectorSettingsModel::addDetectorSettings(const DetectorSettings &detectorSettings)
 {
-    beginInsertRows(QModelIndex(), rowCount(), rowCount());
-    m_settingsList.append(detectorSettings);
-    endInsertRows();
+    QMutexLocker locker(&m_mutex);
+    int newId = DetectorSettingsDAO().insertDetectorSettings(detectorSettings);
+
+    if (newId > 0) {
+        DetectorSettings settings = detectorSettings;
+        settings.setId(newId);
+        beginInsertRows(QModelIndex(), rowCount(), rowCount());
+        m_settingsList.append(settings);
+        endInsertRows();
+
+        emit dataChanged(index(rowCount()-1, 0), index(rowCount()-1, columnCount()));
+    }
 }
 
 void DetectorSettingsModel::removeDetectorSettings(int row)
@@ -131,9 +137,15 @@ void DetectorSettingsModel::removeDetectorSettings(int row)
     if (row < 0 || row >= rowCount()) {
         return;
     }
-    beginRemoveRows(QModelIndex(), row, row);
-    m_settingsList.removeAt(row);
-    endRemoveRows();
+    QMutexLocker locker(&m_mutex);
+    int detectorSettingId = m_settingsList[row].id();
+    if (DetectorSettingsDAO().deleteDetectorSettings(detectorSettingId)) {
+        beginRemoveRows(QModelIndex(), row, row);
+        m_settingsList.removeAt(row);
+        endRemoveRows();
+
+        emit dataChanged(index(row, 0), index(row, columnCount()));
+    }
 }
 
 void DetectorSettingsModel::updateDetectorSettings(int row, const DetectorSettings &detectorSettings)
@@ -141,11 +153,19 @@ void DetectorSettingsModel::updateDetectorSettings(int row, const DetectorSettin
     if (row < 0 || row >= rowCount()) {
         return;
     }
-    m_settingsList[row] = detectorSettings;
-    emit dataChanged(index(row, 0), index(row, columnCount()));
+    QMutexLocker locker(&m_mutex);
+    if (DetectorSettingsDAO().updateDetectorSettings(detectorSettings)) {
+        m_settingsList[row] = detectorSettings;
+        emit dataChanged(index(row, 0), index(row, columnCount()));
+    }
 }
 
 const DetectorSettings &DetectorSettingsModel::getDetectorSettings(int row) const
 {
     return m_settingsList[row];
+}
+
+const QList<DetectorSettings> &DetectorSettingsModel::detectorSettings() const
+{
+    return m_settingsList;
 }

@@ -1,5 +1,6 @@
 #include "MenuBarManager.h"
 #include <QMessageBox>
+#include "UserManageDialog.h"
 
 MenuBarManager::MenuBarManager(QMainWindow *parent) : QObject(parent), mainWindow(parent) {
     menuBar = new QMenuBar(parent);
@@ -15,7 +16,12 @@ void MenuBarManager::setupMenuBar() {
     createEditMenu();
     createViewMenu();
     createExperimentMenu();
+    createDataMenu();
+    createHelpMenu();
 }
+
+
+
 
 void MenuBarManager::createFileMenu() {
     QMenu *fileMenu = menuBar->addMenu("File");
@@ -107,6 +113,19 @@ void MenuBarManager::createHelpMenu()
     helpMenu->addAction(helpAction);
 }
 
+void MenuBarManager::createDataMenu()
+{
+    QMenu *dataMenu = menuBar->addMenu("Data");
+    QAction *importAction = new QAction("Import Data", mainWindow);
+    QAction *exportAction = new QAction("Export Data", mainWindow);
+    userManage = new QAction("User Management", mainWindow);
+    dataMenu->addAction(importAction);
+    dataMenu->addAction(exportAction);
+    dataMenu->addSeparator();
+    dataMenu->addAction(userManage);
+    connect(userManage, &QAction::triggered, this, &MenuBarManager::openUserManageDialog);
+}
+
 
 
 void MenuBarManager::openFile() {
@@ -119,4 +138,10 @@ void MenuBarManager::saveFile() {
 
 void MenuBarManager::runExperiment() {
     QMessageBox::information(mainWindow, "Experiment", "Running experiment...");
+}
+
+void MenuBarManager::openUserManageDialog()
+{
+    UserManageDialog dialog(mainWindow);
+    dialog.exec();
 }

@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_PREFIX_PATH "D:/Qt/6.8.0/llvm-mingw_64")
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools Sql)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools Sql Network Charts)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools Sql Network Charts StateMachine)
 
 option(ENABLE_DEBUG_MODE "Enable debug mode" ON)
 if(ENABLE_DEBUG_MODE)
@@ -29,7 +29,7 @@ set(PROJECT_SOURCES
         ${TS_FILES}
 )
 
-include_directories(network datamodel database widgets dialogs delegate)
+include_directories(. network datamodel database widgets dialogs delegate data_visualization data_manage test)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(SeekCytometer
@@ -71,6 +71,41 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         network/NetworkClient.cpp network/NetworkClient.h network/NetworkFrame.cpp network/NetworkFrame.h
         widgets/MenuBarManager.h widgets/MenuBarManager.cpp
         database/NodeTypeHelper.h database/NodeTypeHelper.cpp
+        widgets/DataAcquisitionWidget.h widgets/DataAcquisitionWidget.cpp
+        database/WorkSheet.h database/WorkSheet.cpp
+        database/WorkSheetsDAO.h database/WorkSheetsDAO.cpp
+        widgets/WorkSheetWidget.h widgets/WorkSheetWidget.cpp
+        data_visualization/WorkSheetView.h data_visualization/WorkSheetView.cpp
+        data_visualization/WorkSheetScene.h data_visualization/WorkSheetScene.cpp
+        data_visualization/GateItem.h data_visualization/GateItem.cpp
+        database/Gate.h database/Gate.cpp
+        data_visualization/ScatterPlot.h data_visualization/ScatterPlot.cpp
+        data_visualization/HistogramPlot.h data_visualization/HistogramPlot.cpp
+        dialogs/AddNewPlotDialog.h dialogs/AddNewPlotDialog.cpp
+        widgets/CytometerGeneralInfo.h widgets/CytometerGeneralInfo.cpp
+        data_visualization/CustomAxis.h data_visualization/CustomAxis.cpp
+        database/Plot.h database/Plot.cpp
+        database/PlotsDAO.h database/PlotsDAO.cpp
+        database/GatesDAO.h database/GatesDAO.cpp
+        test/TestDataGenerator.h test/TestDataGenerator.cpp
+        data_visualization/PlotBase.h data_visualization/PlotBase.cpp
+        database/MeasurementTypeHelper.h database/MeasurementTypeHelper.cpp
+        data_manage/RingBuffer.h
+        data_manage/ChartBuffer.h
+
+        data_manage/DataManager.h data_manage/DataManager.cpp
+        CytometerController.h CytometerController.cpp
+        data_visualization/RectangleGateItem.h data_visualization/RectangleGateItem.cpp
+        data_visualization/PolygonGateItem.h data_visualization/PolygonGateItem.cpp
+        data_visualization/EllipseGateItem.h data_visualization/EllipseGateItem.cpp
+        data_visualization/IntervalGateItem.h data_visualization/IntervalGateItem.cpp
+        data_visualization/QuadrantGateItem.h data_visualization/QuadrantGateItem.cpp
+        data_visualization/GateItemFactory.h data_visualization/GateItemFactory.cpp
+
+        network/UdpCommFrame.h network/UdpCommFrame.cpp
+        network/UdpCommClient.h network/UdpCommClient.cpp
+        dialogs/UserManageDialog.h dialogs/UserManageDialog.cpp
+        widgets/SortingWidget.h widgets/SortingWidget.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET SeekCytometer APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -94,7 +129,7 @@ else()
     qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 endif()
 
-target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Sql Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Charts)
+target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Sql Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Charts Qt${QT_VERSION_MAJOR}::StateMachine)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

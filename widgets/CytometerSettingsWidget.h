@@ -4,6 +4,7 @@
 #include <QDockWidget>
 #include <QObject>
 #include "CytometerSettings.h"
+#include "CytometerGeneralInfo.h"
 #include "DetectorSettingsWidget.h"
 
 class CytometerSettingsWidget : public QDockWidget
@@ -13,12 +14,18 @@ public:
     explicit CytometerSettingsWidget(const QString &title, QWidget *parent = nullptr);
     ~CytometerSettingsWidget();
 
+    const QList<DetectorSettings> &detectorSettings() const;
+
+public slots:
+    void onCytometerSettingsChanged(int cytometerSettingId);
+
 signals:
 
 private:
     void initDockWidget();
-    DetectorSettingsModel   *m_detectorSettingsModel;
+    CytometerSettings       m_cytometerSettings;
     DetectorSettingsWidget  *m_detectorSettingsWidget;
+    CytometerGeneralInfo    *m_generalInfoWidget;
 };
 
 #endif // CYTOMETERSETTINGSWIDGET_H

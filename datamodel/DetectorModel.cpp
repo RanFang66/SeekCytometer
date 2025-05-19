@@ -124,10 +124,10 @@ const Detector &DetectorModel::getDetector(int row) const
     return m_detectorList.at(row);
 }
 
-void DetectorModel::initDetectorModel()
+void DetectorModel::initDetectorModel(int settingId)
 {
     beginResetModel();
-    m_detectorList = detectorsDAO.fetchDetectors();
+    m_detectorList = detectorsDAO.fetchDetectorsUnset(settingId);
     endResetModel();
 }
 

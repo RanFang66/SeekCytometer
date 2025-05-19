@@ -2,23 +2,30 @@
 #define DETECTORSETTINGSWIDGET_H
 
 #include <QWidget>
+#include <QTableView>
+
 #include "DetectorSettingsModel.h"
 
 class DetectorSettingsWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit DetectorSettingsWidget(DetectorSettingsModel *model, QWidget *parent = nullptr);
+    explicit DetectorSettingsWidget(QWidget *parent = nullptr);
+    void onCytometerSettingChanged(int settingId);
+    const QList<DetectorSettings> &detectorSettings() const;
+
 
 signals:
 
 private:
     void initWidget();
-    DetectorSettingsModel *m_dataModel;
-
+    int  m_settingId;
+    QTableView *tableView;
+    DetectorSettingsModel *m_model;
 
 private slots:
     void onAddNewDetectorSetting();
+    void onDeleteDetectorSetting();
 
 };
 

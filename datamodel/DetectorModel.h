@@ -34,7 +34,7 @@ public:
     void removeDetector(int row);
     void updateDetector(int row, const Detector &detector);
     const Detector &getDetector(int row) const;
-    void initDetectorModel();
+    void initDetectorModel(int settingId);
 
 
 private:

@@ -24,6 +24,9 @@ public:
     };
 
 signals:
+    void experimentSelected(int experimentId);
+    void worksheetSelected(int worksheetId);
+    void settingsSelected(int settingsId);
 
 private:
     BrowserDataModel *m_model;
@@ -32,6 +35,9 @@ private:
     QAction *addSpecimen;
     QAction *addTube;
     QAction *addSettings;
+    QAction *addWorkSheet;
+    QAction *expandAll;
+    QAction *collapseAll;
 
     QTreeView *treeView;
 
@@ -50,14 +56,14 @@ private:
     bool isNodeExists(NodeType nodeType, const QString &name, BrowserData *parentNode);
 
     QModelIndex getParentForNewNode(NodeType nodeType);
-    void addNewNode(NodeType nodeType);
+
+    QModelIndex insertNewNode(NodeType nodeType, const QString &name, const QModelIndex &parent);
+
+    int insertNewNodeToDB(NodeType nodeType, BrowserData *parentNode, const QString &nodeName);
 
 private slots:
+    void onAddNewNodeTriggered(QAction *action);
     void onSelectionChanged(const QItemSelection &current, const QItemSelection &previous);
-    void addNewExperiment(bool checked = false);
-    void addNewSpecimen(bool checked = false);
-    void addNewTube(bool checked = false);
-    void addNewSettings(bool checked = false);
 };
 
 #endif // EXPERIMENTSBROWSER_H

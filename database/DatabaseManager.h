@@ -20,9 +20,12 @@ public:
             db.setUserName("postgres");
             db.setPassword("kissfire");
             db.setDatabaseName("SeekCytometer");
+
             if (!db.open()) {
                 qWarning() << "Database connection failed" << db.lastError().text();
             } else {
+                db.setConnectOptions("QPSQL_DISABLE_PREPARE");
+
                 qDebug() << "Database connected";
             }
         }

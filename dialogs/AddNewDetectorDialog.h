@@ -9,12 +9,13 @@ class AddNewDetectorDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit AddNewDetectorDialog(QWidget *parent = nullptr);
+    explicit AddNewDetectorDialog(int settingId, QWidget *parent = nullptr);
 
     QList<Detector> getSelectedDetectors();
 
 private:
     void initDialog();
+    int m_settingId;
     DetectorModel *m_model;
 
     QItemSelectionModel *m_selection;

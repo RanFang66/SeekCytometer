@@ -36,8 +36,13 @@ public:
 
     bool updateDataFromDatabase();
 
+    QModelIndex updateNewNode(NodeType nodeType, const QModelIndex &parent, int nodeId);
+
     bool insertNewNode(NodeType nodeType, const QString &nodeName, const QModelIndex &parent);
-    bool insertCytometerSettings(BrowserData *experimentNode);
+
+    bool insertNewExperiment(const QString &name, const QModelIndex &parent);
+
+    bool removeNode(const QModelIndex &index);
 
     QList<QModelIndex> getNodePath(const QModelIndex &Index);
 
@@ -52,7 +57,6 @@ private:
     const QStringList m_headers = {tr("Name"), tr("Type"), tr("Date")};
 
     void deleteTree(BrowserData *node);
-
 };
 
 #endif // BROWSERDATAMODEL_H

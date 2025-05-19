@@ -1,16 +1,4 @@
 #include "BrowserDataDAO.h"
-// CREATE TYPE NodeType AS ENUM ('User', 'Experiment', 'Specimen', 'Tube', 'Setting');
-// CREATE TABLE BrowserData (
-//     id SERIAL PRIMARY KEY NOT NULL,
-//     parent_id INT,
-//     node_name VARCHAR(64) NOT NULL,
-//     node_type NodeType NOT NULL,
-//     node_id INT NOT NULL,
-//     depth INT NOT NULL,
-//     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-//     updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-//     );
-
 
 const QString BrowserDataDAO::queryUserData = R"(
         WITH RECURSIVE UserHierarchy AS (
@@ -47,7 +35,7 @@ BrowserDataDAO::BrowserDataDAO(QObject *parent)
     : BaseDAO{parent}
 {}
 
-BrowserData *BrowserDataDAO::getBrowserData(const User &user)
+BrowserData *BrowserDataDAO::fetchBrowserData(const User &user)
 {
     QSqlQuery query;
     if (user.isAdmin()) {
@@ -85,33 +73,35 @@ BrowserData *BrowserDataDAO::getBrowserData(const User &user)
     return rootNode;
 }
 
-BrowserData *BrowserDataDAO::getNewNode(NodeType nodeType, const QString &nodeName, BrowserData *parentNode)
+BrowserData *BrowserDataDAO::fetechNode(BrowserData *parentNode,  NodeType nodeType, int nodeId)
 {
     if (!parentNode) {
         return nullptr;
     }
-
     QSqlQuery query;
-    query.prepare("SELECT * FROM BrowserData WHERE node_type=:node_type AND parent_id=:parent_id AND node_name=:node_name");
-    query.bindValue(":node_type", NodeTypeHelper::nodeTypeToString(nodeType));
-    query.bindValue(":parent_id", parentNode->id());
-    query.bindValue(":node_name", nodeName);
+    query.prepare("SELECT * FROM BrowserData WHERE parent_id = :parentId AND node_type = :nodeType AND node_id = :nodeId");
+    query.bindValue(":parentId", parentNode->id());
+    query.bindValue(":nodeType", NodeTypeHelper::nodeTypeToString(nodeType));
+    query.bindValue(":nodeId", nodeId);
+
     if (!query.exec()) {
         handleError(__FUNCTION__, query);
         return nullptr;
     }
+
     if (query.next()) {
         int id = query.value("id").toInt();
         int parentId = query.value("parent_id").toInt();
+        QString nodeName = query.value("node_name").toString();
+        QString nodeTypeStr = query.value("node_type").toString();
+        NodeType nodeType = NodeTypeHelper::stringToNodeType(nodeTypeStr);
         int nodeId = query.value("node_id").toInt();
         int depth = query.value("depth").toInt();
         QDateTime createdAt = query.value("created_at").toDateTime();
         QDateTime updatedAt = query.value("updated_at").toDateTime();
-        BrowserData *node = new BrowserData(id, parentId, nodeName, nodeType, nodeId, depth, createdAt, updatedAt, parentNode);
-        return node;
-    } else {
-        return nullptr;
+        return new BrowserData(id, parentId, nodeName, nodeType, nodeId, depth, createdAt, updatedAt, parentNode);
     }
+    return nullptr;
 }
 
 

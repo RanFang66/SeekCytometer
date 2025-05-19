@@ -5,8 +5,8 @@
 #include <QVBoxLayout>
 #include <QPushButton>
 
-AddNewDetectorDialog::AddNewDetectorDialog(QWidget *parent)
-    : QDialog{parent}
+AddNewDetectorDialog::AddNewDetectorDialog(int settingId, QWidget *parent)
+    : QDialog{parent}, m_settingId{settingId}
 {
     initDialog();
 }
@@ -27,8 +27,8 @@ QList<Detector> AddNewDetectorDialog::getSelectedDetectors()
 void AddNewDetectorDialog::initDialog()
 {
     QTableView *detectorView = new QTableView(this);
-    m_model = new DetectorModel();
-    m_model->initDetectorModel();
+    m_model = new DetectorModel(this);
+    m_model->initDetectorModel(m_settingId);
     detectorView->setModel(m_model);
     m_selection = new QItemSelectionModel(m_model);
     detectorView->setSelectionModel(m_selection);

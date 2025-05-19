@@ -87,7 +87,7 @@ CREATE TABLE CytometerSettings (
 
 -- CREATE INDEX idx_settings_parent ON CytometerSettings(parent_type, parent_id);
 
-CREATE TYPE NodeType AS ENUM ('User', 'Experiment', 'Specimen', 'Tube', 'Settings');
+CREATE TYPE NodeType AS ENUM ('Root', 'User', 'Experiment', 'Specimen', 'Tube', 'Settings', 'Worksheet');
 CREATE TABLE BrowserData (
     id SERIAL PRIMARY KEY NOT NULL,
     parent_id INT,
@@ -96,8 +96,120 @@ CREATE TABLE BrowserData (
     node_id INT NOT NULL,
     depth INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP                            
 );
+
+CREATE TABLE Detectors (
+    detector_id         SERIAL PRIMARY KEY NOT NULL,
+    detector_name       VARCHAR(64) NOT NULL,
+    detector_type       VARCHAR(64) NOT NULL,
+    filter_peak         INT NOT NULL,
+    filter_bandwidth    INT NOT NULL,
+    default_gain        INT NOT NULL DEFAULT 100,
+    default_offset      INT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE DetectorSettings (
+    detector_setting_id SERIAL PRIMARY KEY NOT NULL,
+    setting_id       INT NOT NULL,
+    detector_id      INT NOT NULL,
+    parameter_name   VARCHAR(64) NOT NULL,
+    detector_gain    INT NOT NULL DEFAULT 100,
+    detector_offset  INT NOT NULL DEFAULT 0,
+    enable_threshold BOOLEAN NOT NULL DEFAULT FALSE,
+    threshold_value  INT NOT NULL DEFAULT 1000,
+    enable_height    BOOLEAN NOT NULL DEFAULT FALSE,
+    enable_width     BOOLEAN NOT NULL DEFAULT FALSE,
+    enable_area      BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (setting_id) REFERENCES CytometerSettings(setting_id) ON DELETE CASCADE,
+    FOREIGN KEY (detector_id) REFERENCES Detectors(detector_id) ON DELETE CASCADE,
+    UNIQUE (setting_id, parameter_name),
+    UNIQUE (setting_id, detector_id)
+);
+
+
+
+CREATE TABLE WorkSheets (
+    worksheet_id        SERIAL PRIMARY KEY NOT NULL,
+    is_global           BOOLEAN NOT NULL DEFAULT TRUE,
+    experiment_id       INT,
+    tube_id             INT,
+    worksheet_name      VARCHAR(64) NOT NULL,   
+
+    CHECK (
+        (is_global = TRUE AND experiment_id IS NOT NULL AND tube_id IS NULL) OR
+        (is_global = FALSE AND experiment_id IS NULL AND tube_id IS NOT NULL)
+    ),
+    UNIQUE (experiment_id, worksheet_name),
+    UNIQUE (tube_id, worksheet_name)
+);
+
+
+CREATE TYPE PlotType AS ENUM('Histogram', 'Scatter', 'Contour');
+CREATE TYPE MeasureType AS ENUM('Height', 'Width', 'Area');
+CREATE TABLE Plots (
+    plot_id             SERIAL PRIMARY KEY NOT NULL,
+    worksheet_id        INT NOT NULL,
+    plot_type           PlotType NOT NULL,
+    plot_name           VARCHAR(64) NOT NULL,
+    x_axis_id           INT NOT NULL,
+    y_axis_id           INT,
+    x_measure_type      MeasureType NOT NULL DEFAULT 'Height',
+    y_measure_type      MeasureType, 
+    plot_size           INT NOT NULL DEFAULT 512, 
+    FOREIGN KEY (worksheet_id) REFERENCES WorkSheets(worksheet_id) ON DELETE CASCADE,
+    FOREIGN KEY (x_axis_id) REFERENCES DetectorSettings(detector_setting_id) ON DELETE CASCADE,
+    FOREIGN KEY (y_axis_id) REFERENCES DetectorSettings(detector_setting_id) ON DELETE CASCADE,
+    UNIQUE (worksheet_id, plot_name)
+);
+
+
+CREATE TYPE PopulationLogicOperator AS ENUM('NONE', 'AND', 'OR', 'NOT', 'REST');
+CREATE TABLE Populations (
+    population_id       SERIAL PRIMARY KEY NOT NULL,
+    worksheet_id        INT NOT NULL,
+    population_name     TEXT NOT NULL,
+    parent_id           INT,
+    logic_op            PopulationLogicOperator NOT NULL DEFAULT 'NONE',
+    FOREIGN KEY (worksheet_id) REFERENCES WorkSheets(worksheet_id) ON DELETE CASCADE,
+    FOREIGN KEY (parent_id) REFERENCES Populations(population_id) ON DELETE CASCADE
+);
+
+
+
+CREATE TYPE GateType AS ENUM('rectangle', 'polygon', 'ellipse', 'interval', 'quadrant');
+CREATE TABLE Gates (
+    gate_id                     SERIAL PRIMARY KEY NOT NULL,
+    worksheet_id                INT NOT NULL,
+    gate_name                   VARCHAR(64) NOT NULL,
+    gate_type                   GateType NOT NULL,
+    parent_population_id        INT,
+    x_axis_id                   INT NOT NULL,
+    y_axis_id                   INT,
+    x_mearsure_type             MeasureType NOT NULL DEFAULT 'Height',
+    y_mearsure_type             MeasureType,
+    gate_data                   JSONB NOT NULL,
+    FOREIGN KEY (worksheet_id) REFERENCES WorkSheets(worksheet_id) ON DELETE CASCADE,
+    FOREIGN KEY (x_axis_id) REFERENCES DetectorSettings(detector_setting_id) ON DELETE CASCADE,
+    FOREIGN KEY (y_axis_id) REFERENCES DetectorSettings(detector_setting_id) ON DELETE CASCADE,
+    UNIQUE (worksheet_id, gate_name)
+);
+
+
+
+CREATE TABLE PopulationRelation (
+    relation_id                     SERIAL PRIMARY KEY NOT NULL,
+    population_id                   INT NOT NULL,
+    compose_population_id           INT,
+    gate_id                         INT,
+    FOREIGN KEY (population_id) REFERENCES Populations(population_id) ON DELETE CASCADE,
+    FOREIGN KEY (compose_population_id) REFERENCES Populations(population_id) ON DELETE CASCADE,
+    FOREIGN KEY (gate_id) REFERENCES Gates(gate_id) ON DELETE CASCADE,
+    UNIQUE (population_id, compose_population_id),
+    UNIQUE (relation_id, gate_id)
+);
+
+
 
 CREATE TRIGGER AfterUserInsert
 AFTER INSERT ON Users
@@ -176,78 +288,23 @@ AFTER DELETE ON CytometerSettings
 FOR EACH ROW
 EXECUTE FUNCTION after_settings_delete_function();
 
+CREATE TRIGGER AfterWorksheetsInsert
+AFTER INSERT ON WorkSheets
+FOR EACH ROW
+EXECUTE FUNCTION after_worksheet_insert_function();
 
-CREATE TABLE Detectors (
-    detector_id         SERIAL PRIMARY KEY NOT NULL,
-    detector_name       VARCHAR(64) NOT NULL,
-    detector_type       VARCHAR(64) NOT NULL,
-    filter_peak         INT NOT NULL,
-    filter_bandwidth    INT NOT NULL,
-    default_gain        INT NOT NULL DEFAULT 100,
-    default_offset      INT NOT NULL DEFAULT 0
-);
+CREATE TRIGGER AfterWorksheetsUpdate
+AFTER UPDATE ON WorkSheets
+FOR EACH ROW
+EXECUTE FUNCTION after_worksheet_update_function();
 
-CREATE TABLE DetectorSettings (
-    setting_id        INT NOT NULL,
-    detector_id      INT NOT NULL,
-    parameter_name   VARCHAR(64) NOT NULL,
-    detector_gain    INT NOT NULL DEFAULT 100,
-    detector_offset  INT NOT NULL DEFAULT 0,
-    enable_threshold BOOLEAN NOT NULL DEFAULT FALSE,
-    threshold_value  INT NOT NULL DEFAULT 1000,
-    enable_height    BOOLEAN NOT NULL DEFAULT FALSE,
-    enable_width     BOOLEAN NOT NULL DEFAULT FALSE,
-    enable_area      BOOLEAN NOT NULL DEFAULT FALSE,
-    FOREIGN KEY (setting_id) REFERENCES CytometerSettings(setting_id) ON DELETE CASCADE,
-    FOREIGN KEY (detector_id) REFERENCES Detectors(detector_id) ON DELETE CASCADE,
-    PRIMARY KEY (setting_id, detector_id)
-);
+CREATE TRIGGER AfterWorksheetsDelete
+AFTER DELETE ON WorkSheets
+FOR EACH ROW
+EXECUTE FUNCTION after_worksheet_delete_function();
 
 
-
--- CREATE TYPE WorksheetParent AS ENUM('experiment', 'tube');
--- CREATE TABLE WorkSheets (
---     worksheet_id        SERIAL PRIMARY KEY NOT NULL,
---     worksheet_parent    WorksheetParent NOT NULL,
---     parent_id           INT NOT NULL,
---     worksheet_name      VARCHAR(64) NOT NULL,
---     CONSTRAINT fk_parent_worksheet FOREIGN KEY (parent_id) REFERENCES WorkSheets(worksheet_id) ON DELETE CASCADE,
---     CONSTRAINT fk_parent_tube FOREIGN KEY (parent_id) REFERENCES Tubes(tube_id) ON DELETE CASCADE,
---     UNIQUE (parent_id, worksheet_name)
--- );
-
-
--- CREATE TYPE PlotType AS ENUM('histogram', 'scatter', 'density', 'contour');
--- CREATE TABLE Plots (
---     plot_id         SERIAL PRIMARY KEY NOT NULL,
---     worksheet_id    INT NOT NULL,
---     plot_type       PlotType NOT NULL,
---     plot_name       VARCHAR(64) NOT NULL,
---     channel_id_x    INT NOT NULL,
---     channel_id_y    INT,
---     plot_data       JSON NOT NULL,
---     FOREIGN KEY (worksheet_id) REFERENCES WorkSheets(worksheet_id) ON DELETE CASCADE,
---     FOREIGN KEY (channel_id_x) REFERENCES ChannelSettings(setting_channel_id) ON DELETE CASCADE,
---     FOREIGN KEY (channel_id_y) REFERENCES ChannelSettings(setting_channel_id) ON DELETE CASCADE,
---     UNIQUE (worksheet_id, plot_name)
--- );
-
--- CREATE TYPE GateType AS ENUM('rectangle', 'polygon', 'interval', 'quadrant', 'ellipse');
--- CREATE TABLE GATES (
---     gate_id         SERIAL PRIMARY KEY NOT NULL,
---     worksheet_id    INT NOT NULL,
---     gate_name       VARCHAR(64) NOT NULL,
---     gate_type       GateType NOT NULL,
---     channel_id_x    INT NOT NULL,
---     channel_id_y    INT,
---     gate_data       JSON NOT NULL,
---     FOREIGN KEY (worksheet_id) REFERENCES WorkSheets(worksheet_id) ON DELETE CASCADE,
---     FOREIGN KEY (channel_id_x) REFERENCES ChannelSettings(setting_channel_id) ON DELETE CASCADE,
---     FOREIGN KEY (channel_id_y) REFERENCES ChannelSettings(setting_channel_id) ON DELETE CASCADE,
---     UNIQUE (worksheet_id, gate_name)
--- );
-
-
-
-
-
+CREATE TRIGGER AfterGatesInsert
+AFTER INSERT ON Gates
+FOR EACH ROW
+EXECUTE FUNCTION after_gate_insert_function();

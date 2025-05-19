@@ -19,7 +19,8 @@ class UsersDAO : public BaseDAO
 public:
     explicit UsersDAO(QObject *parent = nullptr);
 
-    bool insertUser(const User &user);
+    int insertUser(const User &user);
+    int insertUser(const QString &name, bool isAdmin, const QString &department, const QString &email);
     bool updateUser(const User &user);
     bool deleteUser(int userId);
     QList<User> fetchUsers() const;

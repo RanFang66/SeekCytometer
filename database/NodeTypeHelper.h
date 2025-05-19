@@ -3,6 +3,7 @@
 
 #include <QString>
 #include <unordered_map>
+#include <QMetaType>
 
 #include <QHash>
 
@@ -13,8 +14,11 @@ enum class NodeType {
     Specimen,
     Tube,
     Settings,
+    Worksheet,
     Unknown,
 };
+
+Q_DECLARE_METATYPE(NodeType);
 
 class NodeTypeHelper {
 public:

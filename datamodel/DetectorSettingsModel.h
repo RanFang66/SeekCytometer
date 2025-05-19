@@ -6,7 +6,7 @@
 
 #include <QVariant>
 #include "DetectorSettings.h"
-#include "DetectorSettingsDAO.h"
+#include <QMutex>
 
 class DetectorSettingsModel : public QAbstractTableModel
 {
@@ -25,7 +25,12 @@ public:
         ColumnCount,
     };
 
-    explicit DetectorSettingsModel(QObject *parent = nullptr);
+    static DetectorSettingsModel *instance() {
+        static DetectorSettingsModel instance;
+        return &instance;
+    }
+    DetectorSettingsModel(const DetectorSettingsModel &) = delete;
+    DetectorSettingsModel &operator=(const DetectorSettingsModel &) = delete;
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -36,18 +41,20 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
 
-    void initDetectorModel(int configId);
+    void resetDetectorSettingModel(int settingId);
     void addDetectorSettings(const DetectorSettings &detectorSettings);
     void removeDetectorSettings(int row);
     void updateDetectorSettings(int row, const DetectorSettings &detectorSettings);
 
     const DetectorSettings &getDetectorSettings(int row) const;
+    const QList<DetectorSettings> &detectorSettings() const;
 
 private:
+    explicit DetectorSettingsModel(QObject *parent = nullptr);
     const QStringList m_headerData = {"Detector ID", "Parameter", "Gain", "Offset", "Height", "Width", "Area",
                                       "Threshold", "Threshold Value"};
     QList<DetectorSettings> m_settingsList;
-    DetectorSettingsDAO m_detectorSettingsDAO;
+    QMutex m_mutex;
 };
 
 #endif // DETECTORSETTINGSMODEL_H

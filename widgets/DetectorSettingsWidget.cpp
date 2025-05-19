@@ -5,20 +5,19 @@
 #include <QHBoxLayout>
 #include "AddNewDetectorDialog.h"
 #include "CheckBoxDelegate.h"
+#include <QMessageBox>
+#include "DetectorSettingsModel.h"
 
-DetectorSettingsWidget::DetectorSettingsWidget(DetectorSettingsModel *model, QWidget *parent)
-    : QWidget{parent}, m_dataModel{model}
+DetectorSettingsWidget::DetectorSettingsWidget(QWidget *parent)
+    : QWidget{parent}, m_settingId(0), tableView(new QTableView(this)), m_model(DetectorSettingsModel::instance())
 {
     initWidget();
 }
 
 void DetectorSettingsWidget::initWidget()
 {
-    QTableView *tableView = new QTableView(this);
+    tableView->setModel(m_model);
     tableView->setEditTriggers(QAbstractItemView::AllEditTriggers);
-
-
-    tableView->setModel(m_dataModel);
 
     CheckBoxDelegate *delegate = new CheckBoxDelegate(tableView);
     tableView->setItemDelegateForColumn(DetectorSettingsModel::EnableHeightColumn, delegate);
@@ -37,21 +36,46 @@ void DetectorSettingsWidget::initWidget()
     setLayout(layout);
 
     connect(btnAdd, &QPushButton::clicked, this, &DetectorSettingsWidget::onAddNewDetectorSetting);
-    connect(btnRemove, &QPushButton::clicked, this, [this](){
-        m_dataModel->removeDetectorSettings(0);
-    });
+    connect(btnRemove, &QPushButton::clicked, this, &DetectorSettingsWidget::onDeleteDetectorSetting);
+}
+
+void DetectorSettingsWidget::onCytometerSettingChanged(int settingId)
+{
+    m_settingId = settingId;
+    m_model->resetDetectorSettingModel(m_settingId);
+}
+
+const QList<DetectorSettings> &DetectorSettingsWidget::detectorSettings() const
+{
+    return m_model->detectorSettings();
 }
 
 void DetectorSettingsWidget::onAddNewDetectorSetting()
 {
-    AddNewDetectorDialog *dlg = new AddNewDetectorDialog(this);
+    if (m_settingId == 0) {
+        QMessageBox::warning(this, tr("No Experiment Selected"), tr("You should select an experiment first!"));
+        return;
+    }
+
+
+    AddNewDetectorDialog *dlg = new AddNewDetectorDialog(m_settingId, this);
     int ret = dlg->exec();
     if (ret == QDialog::Accepted) {
         QList<Detector> seletectedDetectors = dlg->getSelectedDetectors();
         for (const Detector &detector : seletectedDetectors) {
-            m_dataModel->addDetectorSettings(DetectorSettings(0, detector.id(), detector.name()));
+            m_model->addDetectorSettings(DetectorSettings(m_settingId, detector));
         }
     }
 
     delete dlg;
+}
+
+void DetectorSettingsWidget::onDeleteDetectorSetting()
+{
+    QMessageBox::StandardButton ret = QMessageBox::question(this, tr("Delete Detector Setting"), tr("Confirm to delete the selected detector setting?"),
+                          QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+    if (ret == QMessageBox::No) {
+        return;
+    }
+    m_model->removeDetectorSettings(tableView->currentIndex().row());
 }

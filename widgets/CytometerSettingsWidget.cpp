@@ -2,9 +2,10 @@
 #include <QTabWidget>
 #include <QVBoxLayout>
 #include <QStatusBar>
+#include <CytometerSettingsDAO.h>
 
 CytometerSettingsWidget::CytometerSettingsWidget(const QString &title, QWidget *parent)
-    : QDockWidget{title, parent}
+    : QDockWidget{title, parent}, m_generalInfoWidget(new CytometerGeneralInfo(this)), m_detectorSettingsWidget(new DetectorSettingsWidget(this))
 {
     initDockWidget();
 }
@@ -14,10 +15,20 @@ CytometerSettingsWidget::~CytometerSettingsWidget()
 
 }
 
+const QList<DetectorSettings> &CytometerSettingsWidget::detectorSettings() const
+{
+    return m_detectorSettingsWidget->detectorSettings();
+}
+
+void CytometerSettingsWidget::onCytometerSettingsChanged(int cytometerSettingId)
+{
+    m_cytometerSettings = CytometerSettingsDAO().fetchCytometerSettings(cytometerSettingId);
+    m_generalInfoWidget->onCytometerSettingsChanged(m_cytometerSettings);
+    m_detectorSettingsWidget->onCytometerSettingChanged(cytometerSettingId);
+}
+
 void CytometerSettingsWidget::initDockWidget()
 {
-    m_detectorSettingsModel = new DetectorSettingsModel();
-    m_detectorSettingsWidget = new DetectorSettingsWidget(m_detectorSettingsModel);
     QWidget     *mainWidget = new QWidget(this);
     QTabWidget  *tabWidget = new QTabWidget(mainWidget);
     QStatusBar  *statusBar = new QStatusBar(mainWidget);
@@ -26,12 +37,12 @@ void CytometerSettingsWidget::initDockWidget()
     layout->addWidget(tabWidget);
     layout->addWidget(statusBar);
 
-    tabWidget->addTab(new QWidget(), "General");
-    tabWidget->addTab(new QWidget(), "Lasers");
+    tabWidget->addTab(m_generalInfoWidget, "General");
     tabWidget->addTab(m_detectorSettingsWidget, "Detectors");
+    tabWidget->addTab(new QWidget(), "Lasers");
     tabWidget->addTab(new QWidget(), "Thresholds");
     tabWidget->addTab(new QWidget(), "Compensation");
-
+    tabWidget->setCurrentIndex(1);
     statusBar->showMessage("Cytometer Connected");
 
     mainWidget->setLayout(layout);

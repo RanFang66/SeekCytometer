@@ -4,20 +4,31 @@ UsersDAO::UsersDAO(QObject *parent)
     : BaseDAO{parent}
 {}
 
-bool UsersDAO::insertUser(const User &user)
+int UsersDAO::insertUser(const User &user)
 {
     QSqlQuery query(m_db);
-    query.prepare("INSERT INTO Users (user_name, user_admin, department, email) VALUES (:user_name, :user_admin, :department, :email)");
+    query.prepare("INSERT INTO Users (user_name, user_admin, department, email) VALUES (:user_name, :user_admin, :department, :email) RETURNING user_id");
     query.bindValue(":user_name", user.name());
     query.bindValue(":user_admin", user.isAdmin());
     query.bindValue(":department", user.department());
     query.bindValue(":email", user.email());
 
-    if (!query.exec()) {
+    if (query.exec() && query.next()) {
+        return query.value(0).toInt();
+    } else {
         handleError(__FUNCTION__, query);
-        return false;
+        return 0;
     }
-    return true;
+}
+
+int UsersDAO::insertUser(const QString &name, bool isAdmin, const QString &department, const QString &email)
+{
+    User user;
+    user.setName(name);
+    user.setAdmin(isAdmin);
+    user.setDepartment(department);
+    user.setEmail(email);
+    return insertUser(user);
 }
 
 

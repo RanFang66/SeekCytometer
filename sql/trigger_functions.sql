@@ -249,3 +249,88 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+CREATE OR REPLACE FUNCTION after_worksheet_insert_function()
+RETURNS TRIGGER AS $$
+DECLARE
+    parentNodeId INT;
+BEGIN
+    SELECT id INTO parentNodeId
+    FROM BrowserData
+    WHERE  
+        (NEW.is_global = FALSE AND node_type = 'Tube' AND node_id = NEW.tube_id) OR
+        (NEW.is_global = TRUE AND node_type = 'Experiment' AND node_id = NEW.experiment_id)
+    LIMIT 1;
+
+    IF parentNodeId IS NULL THEN
+        RAISE EXCEPTION 'Parent node not found in BrowserData for parent id %', NEW.tube_id;
+    END IF;
+
+    INSERT INTO BrowserData (parent_id, node_name, node_type, node_id, depth, created_at)
+    VALUES (
+        parentNodeId, 
+        NEW.worksheet_name, 
+        'Worksheet', 
+        NEW.worksheet_id, 
+        COALESCE((SELECT depth + 1 FROM BrowserData WHERE id = parentNodeId), 0),
+        NOW()
+    );
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION after_worksheet_update_function()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE BrowserData
+    SET 
+        node_name = NEW.worksheet_name,
+        updated_at = NOW()
+    WHERE node_type = 'Worksheet' AND node_id = NEW.worksheet_id;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION after_worksheet_delete_function()
+RETURNS TRIGGER AS $$
+BEGIN
+    WITH RECURSIVE NodesToDelete AS (
+        SELECT id
+        FROM BrowserData
+        WHERE node_type = 'Worksheet' AND node_id = OLD.worksheet_id
+        UNION ALL
+        SELECT ts.id
+        FROM BrowserData ts
+        INNER JOIN NodesToDelete ntd ON ts.parent_id = ntd.id
+    )
+    DELETE FROM BrowserData WHERE id IN (SELECT id FROM NodesToDelete);
+
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION after_gate_insert_function()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO Populations (worksheet_id, population_name, parent_id, logic_op)
+    VALUES (
+        NEW.worksheet_id, 
+        NEW.gate_name, 
+        NEW.parent_population_id,
+        'NONE'
+    );
+
+
+    INSERT INTO PopulationRelation (population_id, gate_id)
+    VALUES (
+        (SELECT population_id FROM Populations WHERE worksheet_id = NEW.worksheet_id AND population_name = NEW.gate_name),
+        NEW.gate_id
+    );
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;

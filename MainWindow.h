@@ -15,6 +15,8 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+public slots:
+
 private:
     CustomStatusBar         *statusBar;
     MenuBarManager          *menuBarManager;

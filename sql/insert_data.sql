@@ -36,7 +36,7 @@ INSERT INTO Detectors (detector_name, detector_type, filter_peak, filter_bandwid
 VALUES
     ('Channel 1', 'PMT', 488, 100),
     ('Channel 2', 'PMT', 563, 100),
-    ('Channel 3', 'PMT', 615, 100),
+    ('Channel 3', 'PMT', 615, 100),                                                                                                                                                                                                                                                                                                                                                                   
     ('Channel 4', 'PMT', 488, 100),
     ('Channel 5', 'PMT', 615, 100),
     ('Channel 6', 'PMT', 488, 100),
@@ -66,13 +66,27 @@ VALUES
     (3, 2, 'SSC', 100, 0, TRUE, FALSE, FALSE),
     (3, 3, 'FITC', 100, 0, TRUE, FALSE, FALSE);
 
--- -- 添加测试数据到 WorkSheets 表
--- INSERT INTO WorkSheets (worksheet_parent, parent_id, worksheet_name)
+-- 添加测试数据到 WorkSheets 表
+INSERT INTO WorkSheets (is_global, experiment_id, worksheet_name)
+VALUES
+    (TRUE, 1, 'Worksheet 1'),
+    (TRUE, 2, 'Worksheet 2');
+
+INSERT INTO WorkSheets (is_global, tube_id, worksheet_name)
+VALUES
+    (FALSE, 1, 'Worksheet 1'),
+    (FALSE, 2, 'Worksheet 2');
+
+-- INSERT INTO Plots (worksheet_id, plot_type, plot_name, x_axis_id, y_axis_id, x_measure_type, y_measure_type)
+-- VALUES (1, 'Scatter', 'Plot 1', 1, 2, 'Height', 'Width'),
+--        (2, 'Histogram', 'Plot 2', 1, NULL, 'Height', NULL);
+
+-- INSERT INTO Gates (worksheet_id, gate_name, gate_type, x_axis_id, y_axis_id, gate_data)
 -- VALUES
---     ('experiment', 1, 'Worksheet 1'),
---     ('experiment', 2, 'Worksheet 2'),
---     ('tube', 1, 'Worksheet 1');
---     ('tube', 2, 'Worksheet 2');
+--     (1, 'Gate 1', 'rectangle', 1, 2, '{"x_range": [1, 2], "y_range": [3, 4]}'),
+--     (2, 'Gate 2', 'ellipse', 1, 2, '{"center": [5, 5], "radius": [2, 3]}');
+
+
 
 -- -- 添加测试数据到 Plots 表
 -- INSERT INTO Plots (worksheet_id, plot_type, plot_name, channel_id_x, channel_id_y, plot_data)

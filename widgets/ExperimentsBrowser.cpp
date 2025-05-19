@@ -9,7 +9,10 @@
 #include "TubesDAO.h"
 #include "UsersDAO.h"
 #include "CytometerSettingsDAO.h"
+#include "WorkSheetsDAO.h"
 #include "AddNewItemDialog.h"
+
+#include <QActionGroup>
 
 #include <QLabel>
 #include <QLineEdit>
@@ -30,29 +33,52 @@ ExperimentsBrowser::~ExperimentsBrowser()
 
 void ExperimentsBrowser::initDockWidget()
 {
+    qRegisterMetaType<NodeType>("NodeType");
     m_model = new BrowserDataModel(this);
     m_theSelection = new QItemSelectionModel(m_model);
 
     QWidget *mainWidget = new QWidget();
 
     QToolBar *toolBar = new QToolBar("ToolBar", mainWidget);
+    QActionGroup *addNodeGroup = new QActionGroup(toolBar);
+
     addExperiment = new QAction("New Experiment", mainWidget);
     addSpecimen = new QAction("New Specimen", mainWidget);
     addTube = new QAction("New Tube", mainWidget);
     addSettings = new QAction("New CytometerSettings", mainWidget);
+    addWorkSheet = new QAction("New WorkSheet", mainWidget);
+
+    expandAll = new QAction("Expand All", mainWidget);
+    collapseAll = new QAction("Collapse All", mainWidget);
+
+    addExperiment->setData(QVariant::fromValue(NodeType::Experiment));
+    addSpecimen->setData(QVariant::fromValue(NodeType::Specimen));
+    addTube->setData(QVariant::fromValue(NodeType::Tube));
+    addSettings->setData(QVariant::fromValue(NodeType::Settings));
+    addWorkSheet->setData(QVariant::fromValue(NodeType::Worksheet));
+
+    addNodeGroup->addAction(addExperiment);
+    addNodeGroup->addAction(addSpecimen);
+    addNodeGroup->addAction(addTube);
+    addNodeGroup->addAction(addSettings);
+    addNodeGroup->addAction(addWorkSheet);
+
 
     toolBar->addAction(addExperiment);
     toolBar->addAction(addSpecimen);
     toolBar->addAction(addTube);
     toolBar->addAction(addSettings);
-
+    toolBar->addAction(addWorkSheet);
+    toolBar->insertSeparator(addWorkSheet);
+    toolBar->addAction(expandAll);
+    toolBar->addAction(collapseAll);
     statusBar = new QStatusBar(mainWidget);
     statusBar->showMessage("Status: IDLE");
 
     treeView = new QTreeView(mainWidget);
     treeView->setModel(m_model);
     treeView->setSelectionModel(m_theSelection);
-    treeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    treeView->setSelectionMode(QAbstractItemView::SingleSelection);
     treeView->setSelectionBehavior(QAbstractItemView::SelectRows);
 
     m_LoginUserIndex = m_model->findIndex(NodeType::User, User::loginUser().name());
@@ -66,17 +92,15 @@ void ExperimentsBrowser::initDockWidget()
     treeView->setWindowTitle("Experiment Data");
     treeView->resize(800, 1200);
     treeView->show();
+    treeView->setHeaderHidden(false);
 
     mainWidget->setLayout(layout);
     setWidget(mainWidget);
 
     connect(m_theSelection, &QItemSelectionModel::selectionChanged, this, &ExperimentsBrowser::onSelectionChanged);
-
-    connect(addExperiment, &QAction::triggered, this, &ExperimentsBrowser::addNewExperiment);
-    connect(addSpecimen, &QAction::triggered, this, &ExperimentsBrowser::addNewSpecimen);
-    connect(addTube, &QAction::triggered, this, &ExperimentsBrowser::addNewTube);
-    connect(addSettings, &QAction::triggered, this, &ExperimentsBrowser::addNewSettings);
-
+    connect(addNodeGroup, &QActionGroup::triggered, this, &ExperimentsBrowser::onAddNewNodeTriggered);
+    connect(expandAll, &QAction::triggered, treeView, &QTreeView::expandAll);
+    connect(collapseAll, &QAction::triggered, treeView, &QTreeView::collapseAll);
 }
 
 
@@ -126,7 +150,6 @@ QModelIndex ExperimentsBrowser::getParentForNewNode(NodeType nodeType)
         break;
     case NodeType::Settings:
         if (selectedNode->nodeType() == NodeType::Tube || selectedNode->nodeType() == NodeType::Specimen){
-
             for (BrowserData *child : selectedNode->children()) {
                 if (child->nodeType() == NodeType::Settings) {
                     return QModelIndex();
@@ -135,6 +158,11 @@ QModelIndex ExperimentsBrowser::getParentForNewNode(NodeType nodeType)
             return selectedIndex;
         }
         break;
+
+    case NodeType::Worksheet:
+        return m_model->getAncestorIndex(selectedIndex, NodeType::Experiment);
+        break;
+
     default:
         return QModelIndex();
         break;
@@ -143,26 +171,60 @@ QModelIndex ExperimentsBrowser::getParentForNewNode(NodeType nodeType)
     return QModelIndex();
 }
 
-void ExperimentsBrowser::addNewExperiment(bool) {
-    addNewNode(NodeType::Experiment);
-}
-
-void ExperimentsBrowser::addNewSpecimen(bool) {
-    addNewNode(NodeType::Specimen);
-}
-
-void ExperimentsBrowser::addNewTube(bool) {
-    addNewNode(NodeType::Tube);
-}
-
-void ExperimentsBrowser::addNewSettings(bool) {
-    addNewNode(NodeType::Settings);
-}
-
-
-
-void ExperimentsBrowser::addNewNode(NodeType nodeType)
+QModelIndex ExperimentsBrowser::insertNewNode(NodeType nodeType, const QString &name, const QModelIndex &parent)
 {
+    if (!parent.isValid()) {
+        return QModelIndex();
+    }
+
+    BrowserData *parentNode = m_model->nodeFromIndex(parent);
+
+    if (isNodeExists(nodeType, name, parentNode)) {
+        QMessageBox::warning(this, tr("Duplicate Node Name"), QString("%1-%2 %3").arg(NodeTypeHelper::nodeTypeToString(nodeType), name, tr(" already exists")));
+        return QModelIndex();
+    }
+
+    int nodeId = insertNewNodeToDB(nodeType, parentNode, name);
+    if (nodeId <= 0) {
+        QMessageBox::warning(this, tr("Database Error"), tr("Failed to insert new node"));
+        return QModelIndex();
+    }
+
+    QModelIndex newIndex = m_model->updateNewNode(nodeType, parent, nodeId);
+    return newIndex;
+}
+
+int ExperimentsBrowser::insertNewNodeToDB(NodeType nodeType, BrowserData *parentNode, const QString &nodeName)
+{
+    int nodeId = 0;
+    switch (nodeType) {
+    case NodeType::Experiment:
+        nodeId = ExperimentsDAO().insertExperiment(nodeName, parentNode->nodeId());
+        break;
+    case NodeType::Specimen:
+        nodeId = SpecimensDAO().insertSpecimen(nodeName, parentNode->nodeId());
+        break;
+    case NodeType::Tube:
+        nodeId = TubesDAO().insertTube(nodeName, parentNode->nodeId());
+        break;
+    case NodeType::Settings:
+        nodeId = CytometerSettingsDAO().insertCytometerSettings(nodeName, parentNode->nodeType(), parentNode->nodeId());
+        break;
+    case NodeType::Worksheet:
+        nodeId = WorkSheetsDAO().insertWorkSheet(nodeName, (parentNode->nodeType() == NodeType::Experiment), parentNode->nodeId());
+        break;
+    default:
+        break;
+    }
+    return nodeId;
+}
+
+
+void ExperimentsBrowser::onAddNewNodeTriggered(QAction *action)
+{
+    NodeType nodeType = action->data().value<NodeType>();
+
+
     QModelIndex parentIndex = getParentForNewNode(nodeType);
     QString errorMessage;
     if (!parentIndex.isValid()) {
@@ -177,50 +239,20 @@ void ExperimentsBrowser::addNewNode(NodeType nodeType)
         QString name = dlg->getItemName();
         delete dlg;
 
-        BrowserData *parentNode = m_model->nodeFromIndex(parentIndex);
-
-        if (isNodeExists(nodeType, name, parentNode)) {
-            errorMessage =  QString("%1 %2").arg(NodeTypeHelper::nodeTypeToString(nodeType), tr(" already exists. Please choose a different name."));
-            QMessageBox::warning(this, tr("Item Exists"), errorMessage);
-            return;
+        QModelIndex newNodeIndex = insertNewNode(nodeType, name, parentIndex);
+        if (newNodeIndex.isValid()) {
+            qDebug() << QString("New %1 node added: ").arg(NodeTypeHelper::nodeTypeToString(nodeType)) << newNodeIndex;
+            treeView->setCurrentIndex(newNodeIndex);
         }
-        bool insertOk = false;
-        int  experimentId = 0;
-        switch (nodeType) {
-        case NodeType::Experiment:
-            ExperimentsDAO().insertExperiment(name, parentNode->nodeId());
-            experimentId = ExperimentsDAO().fetchExperimentId(name, parentNode->nodeId());
-            if (experimentId > 0) {
-                qDebug() << "Insert Experiment OK!" << experimentId;
-                insertOk = CytometerSettingsDAO().insertCytometerSettings("CytometerSettings", NodeType::Experiment, experimentId);
-            } else {
-                insertOk = false;
+        if (nodeType == NodeType::Experiment) {
+            QModelIndex settingIndex = insertNewNode(NodeType::Settings, "CytometerSettings", newNodeIndex);
+            if (!settingIndex.isValid()) {
+                QMessageBox::warning(this, tr("Insert Default Cytometer Settings Failed"), tr("Failed to insert default cytometer settings for new experiment"));
             }
-            if (experimentId > 0 && !insertOk) {
-                ExperimentsDAO().deleteExperiment(experimentId);
+            QModelIndex workSheetIndex = insertNewNode(NodeType::Worksheet, "Global WorkSheet", newNodeIndex);
+            if (!workSheetIndex.isValid()) {
+                QMessageBox::warning(this, tr("Insert Default WorkSheet Failed"), tr("Failed to insert default worksheet for new experiment"));
             }
-
-            break;
-        case NodeType::Specimen:
-            insertOk = SpecimensDAO().insertSpecimen(name, parentNode->nodeId());
-            break;
-        case NodeType::Tube:
-            insertOk = TubesDAO().insertTube(name, parentNode->nodeId());
-            break;
-        case NodeType::Settings:
-            insertOk = CytometerSettingsDAO().insertCytometerSettings(name, parentNode->nodeType(), parentNode->nodeId());
-            break;
-        default:
-            break;
-        }
-        if (!insertOk) {
-            errorMessage = QString("%1 %2").arg(NodeTypeHelper::nodeTypeToString(nodeType), tr("inserted failed!"));
-            QMessageBox::warning(this, tr("Database Error"), errorMessage);
-            return;
-        }
-
-        if (m_model->insertNewNode(nodeType, name, parentIndex)) {
-            treeView->update();
         }
     } else {
         delete dlg;
@@ -242,6 +274,22 @@ void ExperimentsBrowser::onSelectionChanged(const QItemSelection &selected, cons
     }
     currentPathStr = pathList.join("->");
     statusBar->showMessage(currentPathStr);
+
+    BrowserData *currentNode = m_model->nodeFromIndex(currentIndex);
+    NodeType nodeType = currentNode->nodeType();
+    switch (nodeType) {
+    case NodeType::Experiment:
+        emit experimentSelected(currentNode->nodeId());
+        break;
+    case NodeType::Worksheet:
+        emit worksheetSelected(currentNode->nodeId());
+        break;
+    case NodeType::Settings:
+        emit settingsSelected(currentNode->nodeId());
+        break;
+    default:
+        break;
+    }
 }
 
 

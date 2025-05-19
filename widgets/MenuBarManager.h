@@ -47,6 +47,8 @@ private:
     QAction *showSorting;
     QAction *resetLayout;
 
+    QAction *userManage;
+
 
     void setupMenuBar();
     void createFileMenu();
@@ -56,11 +58,13 @@ private:
     void createCytometerMenu();
     void createWorkSheetMenu();
     void createHelpMenu();
+    void createDataMenu();
 
 private slots:
     void openFile();
     void saveFile();
     void runExperiment();
+    void openUserManageDialog();
 };
 
 #endif // MENUBARMANAGER_H

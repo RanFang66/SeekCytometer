@@ -84,6 +84,35 @@ QList<Detector> DetectorsDAO::fetchDetectors() const
     return detectors;
 }
 
+QList<Detector> DetectorsDAO::fetchDetectorsUnset(int settingId) const
+{
+    QList<Detector> detectors;
+
+    QSqlQuery query(m_db);
+    query.prepare("SELECT * FROM Detectors WHERE detector_id NOT IN (SELECT detector_id FROM DetectorSettings WHERE setting_id = :setting_id)");
+    query.bindValue(":setting_id", settingId);
+
+    if (!query.exec()) {
+        handleError(__FUNCTION__, query);
+        return detectors;
+    }
+
+    while (query.next()) {
+        Detector detector{
+            query.value("detector_id").toInt(),
+            query.value("filter_peak").toInt(),
+            query.value("filter_bandwidth").toInt(),
+            query.value("detector_type").toString(),
+            query.value("default_gain").toInt(),
+            query.value("default_offset").toInt(),
+            query.value("detector_name").toString()
+        };
+        detectors.append(detector);
+    }
+
+    return detectors;
+}
+
 
 Detector DetectorsDAO::fetchDetector(int detectorId) const
 {

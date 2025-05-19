@@ -4,32 +4,34 @@ ExperimentsDAO::ExperimentsDAO(QObject *parent)
     : BaseDAO{parent}
 {}
 
-bool ExperimentsDAO::insertExperiment(const Experiment &experiment)
+int ExperimentsDAO::insertExperiment(const Experiment &experiment)
 {
     QSqlQuery query(m_db);
-    query.prepare("INSERT INTO Experiments (user_id, experiment_name) VALUES (:user_id, :experiment_name)");
+    query.prepare("INSERT INTO Experiments (user_id, experiment_name) VALUES (:user_id, :experiment_name) RETURNING experiment_id");
     query.bindValue(":user_id", experiment.userId());
     query.bindValue(":experiment_name", experiment.name());
 
-    if (!query.exec()) {
+    if (query.exec() && query.next()) {
+        return query.value(0).toInt();
+    } else {
         handleError(__FUNCTION__, query);
-        return false;
+        return 0;
     }
-    return true;
 }
 
-bool ExperimentsDAO::insertExperiment(const QString &name, int userId)
+int ExperimentsDAO::insertExperiment(const QString &name, int userId)
 {
     QSqlQuery query(m_db);
-    query.prepare("INSERT INTO Experiments (user_id, experiment_name) VALUES (:user_id, :experiment_name)");
+    query.prepare("INSERT INTO Experiments (user_id, experiment_name) VALUES (:user_id, :experiment_name) RETURNING experiment_id");
     query.bindValue(":user_id", userId);
     query.bindValue(":experiment_name", name);
 
-    if (!query.exec()) {
+    if (query.exec() && query.next()) {
+        return query.value(0).toInt();
+    } else {
         handleError(__FUNCTION__, query);
-        return false;
+        return 0;
     }
-    return true;
 }
 
 

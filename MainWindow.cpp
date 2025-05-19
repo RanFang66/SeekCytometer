@@ -2,8 +2,11 @@
 
 #include "ExperimentsBrowser.h"
 #include "CytometerSettingsWidget.h"
+#include "DataAcquisitionWidget.h"
+#include "WorkSheetWidget.h"
 #include "User.h"
-
+#include "CytometerController.h"
+#include "SortingWidget.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -18,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 MainWindow::~MainWindow() {}
+
 
 void MainWindow::initStatusBar()
 {
@@ -48,10 +52,41 @@ void MainWindow::setupToolBar()
 
 void MainWindow::initDockWidgets()
 {
+    QWidget *p = takeCentralWidget();
+    if (p) {
+        delete p;
+    }
+    setDockNestingEnabled(true);
+
+
+    CytometerController::instance()->start();
+    QTimer::singleShot(1000, this, [this]() {
+        CytometerController::instance()->connect();
+    });
+
     ExperimentsBrowser *experimentsBrowser = new ExperimentsBrowser("Experiments Browser", this);
     addDockWidget(Qt::LeftDockWidgetArea, experimentsBrowser);
-    CytometerSettingsWidget *cytometerSettingsWidget = new CytometerSettingsWidget("Cytometer Settings", this);
-    addDockWidget(Qt::RightDockWidgetArea, cytometerSettingsWidget);
+
+
+    CytometerSettingsWidget *cytometerSettingsWidget = new CytometerSettingsWidget("Cytometer", this);
+    splitDockWidget(experimentsBrowser, cytometerSettingsWidget, Qt::Horizontal);
+
+    // WorkSheetWidget *workSheetWidget = new WorkSheetWidget("WorkSheet", this);
+    splitDockWidget(cytometerSettingsWidget, WorkSheetWidget::instance(), Qt::Horizontal);
+
+    DataAcquisitionWidget *acquisitionWidget = new DataAcquisitionWidget("Acquisition Control", this);
+    splitDockWidget(cytometerSettingsWidget, acquisitionWidget, Qt::Vertical);
+
+    SortingWidget *sortingWidget = new SortingWidget("Sorting Control", this);
+    splitDockWidget(acquisitionWidget, sortingWidget, Qt::Vertical);
+
+    connect(experimentsBrowser, &ExperimentsBrowser::worksheetSelected, WorkSheetWidget::instance(), &WorkSheetWidget::addWorkSheetView);
+    connect(experimentsBrowser, &ExperimentsBrowser::settingsSelected, cytometerSettingsWidget, &CytometerSettingsWidget::onCytometerSettingsChanged);
+
+
+    // QList<QDockWidget *> docks = {experimentsBrowser, cytometerSettingsWidget};
+    // QList<int> sizes = {3, 7};
+    // resizeDocks(docks, sizes, Qt::Horizontal);
 }
 
 

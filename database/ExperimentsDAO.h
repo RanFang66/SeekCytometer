@@ -10,8 +10,8 @@ class ExperimentsDAO : public BaseDAO
 public:
     explicit ExperimentsDAO(QObject *parent = nullptr);
 
-    bool insertExperiment(const Experiment &experiment);
-    bool insertExperiment(const QString &name, int userId);
+    int insertExperiment(const Experiment &experiment);
+    int insertExperiment(const QString &name, int userId);
     bool updateExperiment(const Experiment &experiment);
     bool deleteExperiment(int experimentId);
     QList<Experiment> fetchExperiments() const;

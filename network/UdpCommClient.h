@@ -1,0 +1,94 @@
+#ifndef UDPCOMMCLIENT_H
+#define UDPCOMMCLIENT_H
+
+#include <QObject>
+#include <QUdpSocket>
+#include <QHostAddress>
+#include <QByteArray>
+#include "UdpCommFrame.h"
+#include "DetectorSettings.h"
+
+using SampleData = QVector<QVector<int>>;
+
+/**
+ * @brief UdpCommClient class.
+ * Encapsulates QUdpSocket send/receive logic and uses UdpCommFrame to parse frames.
+ * Designed to run in a separate thread if desired.
+ */
+class UdpCommClient : public QObject
+{
+    Q_OBJECT
+public:
+    explicit UdpCommClient(QObject *parent = nullptr);
+
+public slots:
+    /**
+     * @brief Initializes and binds the UDP socket in its own thread.
+     * @param localBindAddress The local IP to bind to.
+     * @param localBindPort The local port to bind to.
+     * @param remoteAddress The remote target IP to send to.
+     * @param remotePort The remote target port to send to.
+     */
+    void doInitialize();
+
+    /**
+     * @brief Sends a frame according to the custom frame protocol.
+     * @param commandType The 16-bit command type.
+     * @param data The payload data.
+     *
+     * Each time you call sendFrame(), the internal sequence counter is incremented by 1.
+     */
+    bool sendFrame(CommCmdType commandType, const QByteArray &data);
+    bool sendHandshake();
+    bool sendWaveformRequest(const QList<int> &enabledChannels);
+    bool sendAcquireStart();
+    bool sendAcquireStop();
+    bool sendSortingStart();
+    bool sendSortingStop();
+    bool sendDetectorSettings(const QList<DetectorSettings> &settings);
+
+
+
+signals:
+    /**
+     * @brief Emitted when a valid frame is parsed from the received data.
+     * @param sequence The frame's sequence number.
+     * @param commandType The 16-bit command type.
+     * @param dataField The payload data from the frame.
+     * @param sender The IP address of the sender.
+     * @param senderPort The UDP port of the sender.
+     */
+    void frameReceived(quint16 sequence,
+                       CommCmdType commandType,
+                       const QByteArray &dataField,
+                       const QHostAddress &sender,
+                       quint16 senderPort);
+
+    void sampleDataReady(QVector<SampleData> data);
+    void handshakeReceived(const QHostAddress &sender, quint16 senderPort);
+    void waveformDataReceived(const QVector<QVector<int>> &data);
+
+
+
+private slots:
+    /**
+     * @brief Slot triggered when there is pending data to read from the socket.
+     */
+    void onReadyRead();
+
+
+private:
+    QUdpSocket      *m_udpSocket;           ///< The UDP socket instance
+    QHostAddress    m_remoteAddress;        ///< The remote address to send data
+    quint16         m_remotePort;           ///< The remote port to send data
+    QHostAddress    m_localAddress;         ///< The local address to bind to
+    quint16         m_localPort;            ///< The local port
+    QByteArray      m_receiveBuffer;        ///< A buffer to accumulate incoming data
+    quint16         m_sequenceCounter;      ///< Sequence counter that increments for each frame sent
+
+    void parseHandshakeFrame(const QByteArray &data);
+    void parseWaveformFrame(const QByteArray &data);
+    void parseSampleData(const QByteArray &data);
+};
+
+#endif // UDPCOMMCLIENT_H

@@ -14,6 +14,7 @@ public:
     bool updateDetector(const Detector &detector);
     bool deleteDetector(int detectorId);
     QList<Detector> fetchDetectors() const;
+    QList<Detector> fetchDetectorsUnset(int settingId) const;
     Detector fetchDetector(int detectorId) const;
     Detector fetchDetector(const QString &name) const;
     bool isDetectorExists(const QString &name) const;

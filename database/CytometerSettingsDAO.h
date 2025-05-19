@@ -35,8 +35,8 @@ class CytometerSettingsDAO : public BaseDAO
 public:
     explicit CytometerSettingsDAO(QObject *parent = nullptr);
 
-    bool insertCytometerSettings(const CytometerSettings &cytometerSettings);
-    bool insertCytometerSettings(const QString &name, NodeType parentType, int parentId, ThresholdType thresholdType = ThresholdType::ThresholdOr);
+    int  insertCytometerSettings(const CytometerSettings &cytometerSettings);
+    int  insertCytometerSettings(const QString &name, NodeType parentType, int parentId, ThresholdType thresholdType = ThresholdType::ThresholdOr);
     bool updateCytometerSettings(const CytometerSettings &cytometerSettings);
     bool deleteCytometerSettings(int cytometerSettingsId);
     QList<CytometerSettings> fetchCytometerSettings() const;

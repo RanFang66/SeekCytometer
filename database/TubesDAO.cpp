@@ -13,32 +13,34 @@ TubesDAO::TubesDAO(QObject *parent)
 //     UNIQUE (specimen_id, tube_name)
 //     );
 
-bool TubesDAO::insertTube(const Tube &tube)
+int TubesDAO::insertTube(const Tube &tube)
 {
     QSqlQuery query(m_db);
-    query.prepare("INSERT INTO Tubes (specimen_id, tube_name) VALUES (:specimen_id, :tube_name)");
+    query.prepare("INSERT INTO Tubes (specimen_id, tube_name) VALUES (:specimen_id, :tube_name) RETURNING tube_id");
     query.bindValue(":specimen_id", tube.specimenId());
     query.bindValue(":tube_name", tube.name());
 
-    if (!query.exec()) {
+    if (query.exec() && query.next()) {
+        return query.value(0).toInt();
+    } else {
         handleError(__FUNCTION__, query);
-        return false;
+        return 0;
     }
-    return true;
 }
 
-bool TubesDAO::insertTube(const QString &name, int specimenId)
+int TubesDAO::insertTube(const QString &name, int specimenId)
 {
     QSqlQuery query(m_db);
-    query.prepare("INSERT INTO Tubes (specimen_id, tube_name) VALUES (:specimen_id, :tube_name)");
+    query.prepare("INSERT INTO Tubes (specimen_id, tube_name) VALUES (:specimen_id, :tube_name) RETURNING tube_id");
     query.bindValue(":specimen_id", specimenId);
     query.bindValue(":tube_name", name);
 
-    if (!query.exec()) {
+    if (query.exec() && query.next()) {
+        return query.value(0).toInt();
+    } else {
         handleError(__FUNCTION__, query);
-        return false;
+        return 0;
     }
-    return true;
 }
 
 bool TubesDAO::updateTube(const Tube &tube)

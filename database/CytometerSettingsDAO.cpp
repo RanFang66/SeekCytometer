@@ -4,11 +4,11 @@ CytometerSettingsDAO::CytometerSettingsDAO(QObject *parent)
     : BaseDAO{parent}
 {}
 
-bool CytometerSettingsDAO::insertCytometerSettings(const CytometerSettings &cytometerSettings)
+int CytometerSettingsDAO::insertCytometerSettings(const CytometerSettings &cytometerSettings)
 {
     QSqlQuery query(m_db);
     query.prepare("INSERT INTO CytometerSettings (setting_name, parent_type, experiment_id, specimen_id, tube_id, threshold_op) "
-                  "VALUES (:setting_name, :parent_type, :experiment_id, :specimen_id, :tube_id, :threshold_op)");
+                  "VALUES (:setting_name, :parent_type, :experiment_id, :specimen_id, :tube_id, :threshold_op) RETURNING setting_id");
 
     query.bindValue(":setting_name", cytometerSettings.name());
     query.bindValue(":parent_type", NodeTypeHelper::nodeTypeToString(cytometerSettings.parentType()));
@@ -19,18 +19,20 @@ bool CytometerSettingsDAO::insertCytometerSettings(const CytometerSettings &cyto
     query.bindValue(":specimen_id", cytometerSettings.parentType() == NodeType::Specimen ? cytometerSettings.parentId() : QVariant());
     query.bindValue(":tube_id", cytometerSettings.parentType() == NodeType::Tube ? cytometerSettings.parentId() : QVariant());
 
-    if (!query.exec()) {
+    if (query.exec() && query.next()) {
+        return query.value(0).toInt();
+    } else {
         handleError(__FUNCTION__, query);
-        return false;
+        return 0;
     }
-    return true;
+    return 0;
 }
 
-bool CytometerSettingsDAO::insertCytometerSettings(const QString &name, NodeType parentType, int parentId, ThresholdType thresholdType)
+int CytometerSettingsDAO::insertCytometerSettings(const QString &name, NodeType parentType, int parentId, ThresholdType thresholdType)
 {
     QSqlQuery query(m_db);
     query.prepare("INSERT INTO CytometerSettings (setting_name, parent_type, experiment_id, specimen_id, tube_id, threshold_op) "
-                  "VALUES (:setting_name, :parent_type, :experiment_id, :specimen_id, :tube_id, :threshold_op)");
+                  "VALUES (:setting_name, :parent_type, :experiment_id, :specimen_id, :tube_id, :threshold_op) RETURNING setting_id");
 
     query.bindValue(":setting_name", name);
     query.bindValue(":parent_type", NodeTypeHelper::nodeTypeToString(parentType));
@@ -41,11 +43,13 @@ bool CytometerSettingsDAO::insertCytometerSettings(const QString &name, NodeType
     query.bindValue(":specimen_id", parentType == NodeType::Specimen ? parentId : QVariant());
     query.bindValue(":tube_id", parentType == NodeType::Tube ? parentId : QVariant());
 
-    if (!query.exec()) {
+    if (query.exec() && query.next()) {
+        return query.value(0).toInt();
+    } else {
         handleError(__FUNCTION__, query);
-        return false;
+        return 0;
     }
-    return true;
+    return 0;
 }
 
 bool CytometerSettingsDAO::updateCytometerSettings(const CytometerSettings &cytometerSettings)

@@ -1,6 +1,10 @@
 #include "BrowserDataModel.h"
 #include "BrowserDataDAO.h"
-#include "User.h"
+#include "ExperimentsDAO.h"
+#include "SpecimensDAO.h"
+#include "TubesDAO.h"
+#include "CytometerSettingsDAO.h"
+#include "WorkSheetsDAO.h"
 
 BrowserDataModel::BrowserDataModel(QObject *parent)
     : QAbstractItemModel{parent}, m_rootNode(nullptr)
@@ -146,6 +150,7 @@ QModelIndex BrowserDataModel::getAncestorIndex(const QModelIndex &current, NodeT
     QModelIndex ancestorModelIndex = current;
     while (depthDiff > 0) {
         ancestorModelIndex = ancestorModelIndex.parent();
+        depthDiff--;
     }
     return ancestorModelIndex;
 }
@@ -157,10 +162,31 @@ bool BrowserDataModel::updateDataFromDatabase()
     deleteTree(m_rootNode);
     m_rootNode = nullptr;
     BrowserDataDAO dao;
-    m_rootNode = dao.getBrowserData(User::loginUser());
+    m_rootNode = dao.fetchBrowserData(User::loginUser());
     endResetModel();
 
     return (m_rootNode != nullptr);
+}
+
+QModelIndex BrowserDataModel::updateNewNode(NodeType nodeType, const QModelIndex &parent, int nodeId)
+{
+    if (!parent.isValid()) {
+        return QModelIndex();
+    }
+    BrowserData *parentNode = nodeFromIndex(parent);
+    if (!parentNode) {
+        return QModelIndex();
+    }
+
+    BrowserData *newNode = BrowserDataDAO().fetechNode(parentNode, nodeType, nodeId);
+    if (!newNode) {
+        return QModelIndex();
+    }
+
+    beginInsertRows(parent, parentNode->childCount(), parentNode->childCount());
+    parentNode->addChild(newNode);
+    endInsertRows();
+    return indexFromNode(newNode);
 }
 
 bool BrowserDataModel::insertNewNode(NodeType nodeType, const QString &nodeName, const QModelIndex &parent)
@@ -174,45 +200,41 @@ bool BrowserDataModel::insertNewNode(NodeType nodeType, const QString &nodeName,
         return false;
     }
 
-    BrowserDataDAO dao;
-    BrowserData *newNode = dao.getNewNode(nodeType, nodeName, parentNode);
+    int nodeId = 0;
+    switch (nodeType) {
+        case NodeType::Experiment:
+            nodeId = ExperimentsDAO().insertExperiment(nodeName, parentNode->nodeId());
+            break;
+        case NodeType::Specimen:
+            nodeId = SpecimensDAO().insertSpecimen(nodeName, parentNode->nodeId());
+            break;
+        case NodeType::Tube:
+            nodeId = TubesDAO().insertTube(nodeName, parentNode->nodeId());
+            break;
+        case NodeType::Settings:
+            nodeId = CytometerSettingsDAO().insertCytometerSettings(nodeName, parentNode->nodeType(), parentNode->nodeId());
+            break;
+        case NodeType::Worksheet:
+            nodeId = WorkSheetsDAO().insertWorkSheet(nodeName, (parentNode->nodeType() == NodeType::Experiment), parentNode->nodeId());
+            break;
+        default:
+            break;
+    }
+
+    if (nodeId <= 0) {
+        return false;
+    }
+
+    BrowserData *newNode = BrowserDataDAO().fetechNode(parentNode, nodeType, nodeId);
     if (!newNode) {
         return false;
     }
-
     beginInsertRows(parent, parentNode->childCount(), parentNode->childCount());
     parentNode->addChild(newNode);
     endInsertRows();
-
-    qDebug() << "Inserted new node:" << nodeName;
-
-    // 处理特殊情况，例如 Experiment 默认需要插入 CytometerSettings
-    if (nodeType == NodeType::Experiment) {
-        return insertCytometerSettings(newNode);
-    }
-
     return true;
 }
 
-bool BrowserDataModel::insertCytometerSettings(BrowserData *experimentNode)
-{
-    if (!experimentNode || experimentNode->nodeType() != NodeType::Experiment) {
-        return false;
-    }
-
-    BrowserDataDAO dao;
-    BrowserData *settingsNode = dao.getNewNode(NodeType::Settings, "CytometerSettings", experimentNode);
-    if (!settingsNode) {
-        return false;
-    }
-
-    beginInsertRows(indexFromNode(experimentNode), experimentNode->childCount(), experimentNode->childCount());
-    experimentNode->addChild(settingsNode);
-    endInsertRows();
-
-    qDebug() << "Inserted default CytometerSettings for experiment:" << experimentNode->nodeName();
-    return true;
-}
 
 QList<QModelIndex> BrowserDataModel::getNodePath(const QModelIndex &index)
 {

@@ -12,6 +12,7 @@ class BaseDAO : public QObject
 public:
     explicit BaseDAO(QObject *parent = nullptr);
     void handleError(const QString functionName, const QSqlQuery &query) const;
+    const QSqlDatabase &database() const { return m_db; }
 
 protected:
     QSqlDatabase m_db;

@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    QPixmap splashImg(":/resource/images/nezha.jpg");
+    QPixmap splashImg(":/resource/images/seekgene_logo.jpg");
     QScreen *screen = QApplication::primaryScreen();
     QSize screenSize = screen->availableGeometry().size();
     QSize maxSize(screenSize.width() * 0.8, screenSize.height() * 0.8);

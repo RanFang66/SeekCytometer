@@ -10,8 +10,8 @@ class TubesDAO : public BaseDAO
 public:
     explicit TubesDAO(QObject *parent = nullptr);
 
-    bool insertTube(const Tube &tube);
-    bool insertTube(const QString &name, int specimenId);
+    int  insertTube(const Tube &tube);
+    int  insertTube(const QString &name, int specimenId);
     bool updateTube(const Tube &tube);
     bool deleteTube(int tubeId);
     QList<Tube> fetchTubes() const;
