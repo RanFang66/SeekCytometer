@@ -35,6 +35,9 @@ CytometerController::CytometerController(QObject *parent)
     QObject::connect(errorState, &QState::exited, this, &CytometerController::onExitErrorState);
 
 
+    QObject::connect(m_udpClient, &UdpCommClient::udpCommEstablished, this, &CytometerController::connect);
+    QObject::connect(m_udpClient, &UdpCommClient::udpCommLost, this, &CytometerController::disconnect);
+
     unconnectedState->addTransition(this, &CytometerController::connected, idleState);
     idleState->addTransition(this, &CytometerController::acquisitionStarted, acquiringState);
     idleState->addTransition(this, &CytometerController::sortingStarted, sortingState);
@@ -49,13 +52,13 @@ CytometerController::CytometerController(QObject *parent)
     sortingState->addTransition(this, &CytometerController::errorOccurred, errorState);
 
     m_stateMachine.setInitialState(unconnectedState);
-
     m_udpClientThread->start();
 }
 
 
 void CytometerController::start()
 {
+    m_udpClient->startUdpClient();
     m_stateMachine.start();
 }
 

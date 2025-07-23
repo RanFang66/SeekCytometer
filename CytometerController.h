@@ -67,6 +67,9 @@ private:
     QState *acquiringState;
     QState *sortingState;
     QState *errorState;
+
+
+    QTimer *commTimer;
 };
 
 #endif // CYTOMETERCONTROLLER_H

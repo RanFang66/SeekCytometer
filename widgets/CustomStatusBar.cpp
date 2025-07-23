@@ -1,16 +1,16 @@
 #include "CustomStatusBar.h"
 #include <QDateTime>
-#include "NetworkClient.h"
 #include "User.h"
 CustomStatusBar::CustomStatusBar()
 {
     initStatusBar();
 }
 
-void CustomStatusBar::updateConnectInfo(QString ip, quint16 port)
+void CustomStatusBar::updateConnectInfo(StatusIndicator::STATUS status, const QString &info)
 {
-    lblConnectInfo->setText(tr("Connected, server Info: ") + QString("%1:%2").arg(ip).arg(port));
-    connectLed->setStatus(StatusIndicator::STATUS_RUNNING);
+    // lblConnectInfo->setText(tr("Connected, server Info: ") + QString("%1:%2").arg(ip).arg(port));
+    lblConnectInfo->setText(info);
+    connectLed->setStatus(status);
 }
 
 void CustomStatusBar::initStatusBar()
@@ -30,12 +30,9 @@ void CustomStatusBar::initStatusBar()
     timerSecond->setInterval(1000);
     connect(timerSecond, &QTimer::timeout, this, [this](){
         lblCurrTime->setText(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
-        if (connectLed->status() != StatusIndicator::STATUS_RUNNING) {
-            NetworkClient::getInstance()->detectServer();
-        }
     });
 
-// #ifndef DEBUG_MODE
-//     timerSecond->start();
-// #endif
+    #ifndef DEBUG_MODE
+        timerSecond->start();
+    #endif
 }

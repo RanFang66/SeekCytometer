@@ -3,15 +3,28 @@
 
 
 UdpCommClient::UdpCommClient(QObject *parent)
-    : QObject{parent}, m_udpSocket{new QUdpSocket(this)}, m_remotePort(0), m_sequenceCounter(0)
+    : QObject{parent}, m_udpSocket{new QUdpSocket(this)}, m_remotePort(0),
+    m_sequenceCounter(0), m_sequenceValLast(0), m_sequenceReceived(0), m_sequenceReceivedLast(0),
+    m_timerInterval(2000), m_commLostCounter(0), m_connected(false)
 {
     connect(m_udpSocket, &QUdpSocket::readyRead, this, &UdpCommClient::onReadyRead);
 
-    m_remoteAddress = QHostAddress("192.168.1.10");
-    m_remotePort = 8080;
-    m_localAddress = QHostAddress("192.168.1.35");
+    m_handshakeTimer = new QTimer();
+    m_handshakeTimer->setInterval(2000);
+    m_handshakeTimer->stop();
+
+    connect(m_handshakeTimer, &QTimer::timeout, this, &UdpCommClient::onHandshakeTimerTimeon);
+
+    m_remoteAddress = QHostAddress("192.168.8.10");
+    m_remotePort = 5001;
+    m_localAddress = QHostAddress("192.168.8.35");
     m_localPort = 8080;
 
+}
+
+void UdpCommClient::startUdpClient()
+{
+    m_handshakeTimer->start();
 }
 
 
@@ -94,6 +107,37 @@ bool UdpCommClient::sendDetectorSettings(const QList<DetectorSettings> &settings
     }
 }
 
+void UdpCommClient::onHandshakeTimerTimeon()
+{
+    /*
+     * If there is no frame send to SoC between this timer interval, then send handshake frame
+     */
+    if (m_sequenceValLast == m_sequenceCounter) {
+        sendHandshake();
+    }
+    m_sequenceValLast = m_sequenceCounter;
+
+    if (m_connected) {
+        if (m_sequenceReceivedLast == m_sequenceReceived) {
+            m_commLostCounter += m_timerInterval;
+            if (m_commLostCounter > 100000) {
+                emit udpCommLost();
+                m_connected = false;
+                m_commLostCounter = 0;
+            }
+        } else {
+            m_commLostCounter = 0;
+        }
+    } else {
+        if (m_sequenceReceivedLast != m_sequenceReceived) {
+            emit udpCommEstablished();
+            m_connected = true;
+        }
+    }
+
+    m_sequenceReceivedLast = m_sequenceReceived;
+}
+
 
 
 void UdpCommClient::onReadyRead()
@@ -115,6 +159,8 @@ void UdpCommClient::onReadyRead()
             }
             // We got a complete, valid frame
             quint16 sequence = UdpCommFrame::getSequence(oneFrame);
+            m_sequenceReceived = sequence;
+
             CommCmdType cmdType = UdpCommFrame::getCommandType(oneFrame);
             QByteArray dataField = UdpCommFrame::getDataField(oneFrame);
 

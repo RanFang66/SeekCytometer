@@ -1,6 +1,6 @@
 #include "WorkSheetWidget.h"
 #include <QToolBar>
-#include <QACtionGroup>
+#include <QActionGroup>
 #include <QVBoxLayout>
 #include "WorkSheetsDAO.h"
 #include "AddNewPlotDialog.h"

@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    QApplication::setAttribute(Qt::AA_UseStyleSheetPropagationInWidgetStyles, false);
+    // QApplication::setAttribute(Qt::AA_UseStyleSheetPropagationInWidgetStyles, false);
 
 
 

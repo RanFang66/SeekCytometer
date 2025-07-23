@@ -14,7 +14,7 @@ public:
     CustomStatusBar();
 
 public slots:
-    void updateConnectInfo(QString ip, quint16 port);
+    void updateConnectInfo(StatusIndicator::STATUS  status, const QString &info);
 
 
 private:

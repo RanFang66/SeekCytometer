@@ -8,6 +8,8 @@
 #include "UdpCommFrame.h"
 #include "DetectorSettings.h"
 
+#include <QTimer>
+
 using SampleData = QVector<QVector<int>>;
 
 /**
@@ -20,6 +22,8 @@ class UdpCommClient : public QObject
     Q_OBJECT
 public:
     explicit UdpCommClient(QObject *parent = nullptr);
+
+    void     startUdpClient();
 
 public slots:
     /**
@@ -47,7 +51,8 @@ public slots:
     bool sendSortingStop();
     bool sendDetectorSettings(const QList<DetectorSettings> &settings);
 
-
+private slots:
+    void onHandshakeTimerTimeon();
 
 signals:
     /**
@@ -68,6 +73,9 @@ signals:
     void handshakeReceived(const QHostAddress &sender, quint16 senderPort);
     void waveformDataReceived(const QVector<QVector<int>> &data);
 
+    void udpCommEstablished();
+    void udpCommLost();
+
 
 
 private slots:
@@ -84,7 +92,17 @@ private:
     QHostAddress    m_localAddress;         ///< The local address to bind to
     quint16         m_localPort;            ///< The local port
     QByteArray      m_receiveBuffer;        ///< A buffer to accumulate incoming data
+
     quint16         m_sequenceCounter;      ///< Sequence counter that increments for each frame sent
+    quint16         m_sequenceValLast;      ///< Sequence value in last timer interrupt
+    int             m_timerInterval;        ///< Timer interval
+    int             m_commLostCounter;      ///< Counter to judge communication lost with SoC
+    bool            m_connected;            ///< Communication state with SoC
+
+
+    quint16         m_sequenceReceived;     ///< Sequence value received from SoC
+    quint16         m_sequenceReceivedLast; ///< Sequence value received from SoC in last time
+    QTimer          *m_handshakeTimer;      ///< Timer for handshake frame
 
     void parseHandshakeFrame(const QByteArray &data);
     void parseWaveformFrame(const QByteArray &data);

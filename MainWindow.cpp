@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include <QMessageBox>
 
 #include "ExperimentsBrowser.h"
 #include "CytometerSettingsWidget.h"
@@ -18,6 +19,29 @@ MainWindow::MainWindow(QWidget *parent)
 
     setWindowTitle(QString("SeekCytometer - %1").arg(User::loginUser().name()));
     setWindowState(Qt::WindowMaximized);
+
+    CytometerController::instance()->start();
+    connect(CytometerController::instance(), &CytometerController::connected, this, [this](){
+        statusBar->updateConnectInfo(StatusIndicator::STATUS_RUNNING, tr("Connected to Server"));
+        QMessageBox::information(this, tr("Connected"), tr("Connected with Cytometer"));
+    });
+
+    connect(CytometerController::instance(), &CytometerController::disconnected, this, [this](){
+        statusBar->updateConnectInfo(StatusIndicator::STATUS_IDLE, tr("Disconnected"));
+        QMessageBox::warning(this, tr("Disconnected"), tr("Disconnected with Cytometer"));
+    });
+
+    connect(CytometerController::instance(), &CytometerController::errorOccurred, this, [this](){
+        statusBar->updateConnectInfo(StatusIndicator::STATUS_FAULT, tr("Fault"));
+        QMessageBox::critical(this, tr("Fault!"), tr("There is critical fault"));
+    });
+
+
+
+    // QTimer::singleShot(1000, this, [this]() {
+    //     CytometerController::instance()->connect();
+    // });
+
 }
 
 MainWindow::~MainWindow() {}
@@ -58,11 +82,6 @@ void MainWindow::initDockWidgets()
     }
     setDockNestingEnabled(true);
 
-
-    CytometerController::instance()->start();
-    QTimer::singleShot(1000, this, [this]() {
-        CytometerController::instance()->connect();
-    });
 
     ExperimentsBrowser *experimentsBrowser = new ExperimentsBrowser("Experiments Browser", this);
     addDockWidget(Qt::LeftDockWidgetArea, experimentsBrowser);

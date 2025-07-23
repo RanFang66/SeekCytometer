@@ -179,11 +179,11 @@ void NetworkClient::initNetworkClient()
         }
     }
     if (m_localIpv4Addr.isNull()) {
-        m_localIpv4Addr = QHostAddress("192.168.1.35");
+        m_localIpv4Addr = QHostAddress("192.168.8.35");
         qDebug() << "Can not find valid Ethernet!";
     }
-    m_serverIpv4Addr = QHostAddress("192.168.1.10");
-    m_serverPort = 8080;
+    m_serverIpv4Addr = QHostAddress("192.168.8.10");
+    m_serverPort = 5001;
     m_udpClient->bind(m_localPort);
     // connect(m_udpClient, &QUdpSocket::stateChanged, this, &NetworkClient::onUdpSocketStateChanged);
     connect(m_udpClient, &QUdpSocket::readyRead, this, &NetworkClient::onUdpSocketReadyRead);
