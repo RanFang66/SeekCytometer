@@ -6,7 +6,6 @@
 #include <QHostAddress>
 #include <QByteArray>
 #include "UdpCommFrame.h"
-#include "DetectorSettings.h"
 
 #include <QTimer>
 
@@ -44,12 +43,14 @@ public slots:
      */
     bool sendFrame(CommCmdType commandType, const QByteArray &data);
     bool sendHandshake();
-    bool sendWaveformRequest(const QList<int> &enabledChannels);
+    bool sendWaveformRequest(bool enabled, const QList<int> &enabledChannels);
     bool sendAcquireStart();
     bool sendAcquireStop();
     bool sendSortingStart();
     bool sendSortingStop();
-    bool sendDetectorSettings(const QList<DetectorSettings> &settings);
+    bool sendDetectorSettings(const QModelIndex &topLeft, const QModelIndex &bottomRight,
+                              const QList<int> &roles = QList<int>());
+    bool sendDisableDetector(int id);
 
 private slots:
     void onHandshakeTimerTimeon();

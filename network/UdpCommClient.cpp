@@ -1,6 +1,6 @@
 #include "UdpCommClient.h"
 #include "DataManager.h"
-
+#include "DetectorSettingsModel.h"
 
 UdpCommClient::UdpCommClient(QObject *parent)
     : QObject{parent}, m_udpSocket{new QUdpSocket(this)}, m_remotePort(0),
@@ -59,11 +59,17 @@ bool UdpCommClient::sendHandshake()
     return sendFrame(CommCmdType::CMD_HAND_SHAKE, QByteArray());
 }
 
-bool UdpCommClient::sendWaveformRequest(const QList<int> &enabledChannels)
+bool UdpCommClient::sendWaveformRequest(bool enabled, const QList<int> &enabledChannels)
 {
     QByteArray data;
-    QDataStream stream(&data, QIODevice::WriteOnly);
-    stream << enabledChannels;
+
+    quint8 enableCh = 0;
+    for (int val : enabledChannels) {
+        enableCh |=  (0x01 << (val - 1));
+    }
+
+    data.append(static_cast<char>(enabled));
+    data.append(static_cast<char>(enableCh));
     return sendFrame(CommCmdType::CMD_WAVEFORM_DATA, data);
 }
 
@@ -87,11 +93,12 @@ bool UdpCommClient::sendSortingStop()
     return sendFrame(CommCmdType::CMD_SORTING_STOP, QByteArray());
 }
 
-bool UdpCommClient::sendDetectorSettings(const QList<DetectorSettings> &settings)
+bool UdpCommClient::sendDetectorSettings(const QModelIndex &topLeft, const QModelIndex &bottomRight,
+                                         const QList<int> &roles)
 {
     QByteArray data;
     QDataStream stream(&data, QIODevice::WriteOnly);
-    for (const DetectorSettings &setting : settings) {
+    for (const DetectorSettings &setting : DetectorSettingsModel::instance()->detectorSettings()) {
         stream << (char)setting.detectorId();
         stream << (char)setting.isEnabledHeight();
         stream << (char)setting.isEnabledWidth();
@@ -103,6 +110,18 @@ bool UdpCommClient::sendDetectorSettings(const QList<DetectorSettings> &settings
         return false;
     } else {
         qDebug() << "[UdpCommClient] Sent detector settings to remote.";
+        return true;
+    }
+}
+
+bool UdpCommClient::sendDisableDetector(int id)
+{
+    QByteArray data;
+    data.append(static_cast<char>(id));
+    if (!sendFrame(CommCmdType::CMD_DISABLE_DETECTOR, data)) {
+        return false;
+    } else {
+        qDebug() << QString("[UdpCommClient] Disable detector %1 to remote.").arg(id);
         return true;
     }
 }
@@ -120,7 +139,7 @@ void UdpCommClient::onHandshakeTimerTimeon()
     if (m_connected) {
         if (m_sequenceReceivedLast == m_sequenceReceived) {
             m_commLostCounter += m_timerInterval;
-            if (m_commLostCounter > 100000) {
+            if (m_commLostCounter > 10000) {
                 emit udpCommLost();
                 m_connected = false;
                 m_commLostCounter = 0;
@@ -186,11 +205,9 @@ void UdpCommClient::onReadyRead()
 void UdpCommClient::parseHandshakeFrame(const QByteArray &data)
 {
     QDataStream stream(data);
-    quint16 sequence;
-    quint16 state;
-    stream >> sequence;
+    quint8 state;
     stream >> state;
-    qDebug() << "[UdpCommClient] Handshake frame received. Sequence number:" << sequence << "State:" << state;
+    qDebug() << "[UdpCommClient] Handshake frame received " << "Current Cytometer state:" << state;
 }
 
 void UdpCommClient::parseSampleData(const QByteArray &data)

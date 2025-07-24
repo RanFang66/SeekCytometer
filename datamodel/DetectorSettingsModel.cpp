@@ -114,6 +114,8 @@ void DetectorSettingsModel::resetDetectorSettingModel(int settingId)
     beginResetModel();
     m_settingsList = DetectorSettingsDAO().fetchDetectorSettings(settingId);
     endResetModel();
+
+    emit dataChanged(index(0, 0), index(rowCount()-1, columnCount()-1));
 }
 
 void DetectorSettingsModel::addDetectorSettings(const DetectorSettings &detectorSettings)
@@ -128,7 +130,7 @@ void DetectorSettingsModel::addDetectorSettings(const DetectorSettings &detector
         m_settingsList.append(settings);
         endInsertRows();
 
-        emit dataChanged(index(rowCount()-1, 0), index(rowCount()-1, columnCount()));
+        emit dataChanged(index(rowCount()-1, 0), index(rowCount()-1, columnCount()-1));
     }
 }
 
@@ -144,7 +146,7 @@ void DetectorSettingsModel::removeDetectorSettings(int row)
         m_settingsList.removeAt(row);
         endRemoveRows();
 
-        emit dataChanged(index(row, 0), index(row, columnCount()));
+        emit dataChanged(index(row, 0), index(row, columnCount()-1));
     }
 }
 
@@ -156,7 +158,7 @@ void DetectorSettingsModel::updateDetectorSettings(int row, const DetectorSettin
     QMutexLocker locker(&m_mutex);
     if (DetectorSettingsDAO().updateDetectorSettings(detectorSettings)) {
         m_settingsList[row] = detectorSettings;
-        emit dataChanged(index(row, 0), index(row, columnCount()));
+        emit dataChanged(index(row, 0), index(row, columnCount()-1));
     }
 }
 

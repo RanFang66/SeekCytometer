@@ -17,7 +17,7 @@ DetectorSettingsWidget::DetectorSettingsWidget(QWidget *parent)
 void DetectorSettingsWidget::initWidget()
 {
     tableView->setModel(m_model);
-    tableView->setEditTriggers(QAbstractItemView::AllEditTriggers);
+    tableView->setEditTriggers(QAbstractItemView::DoubleClicked);
 
     CheckBoxDelegate *delegate = new CheckBoxDelegate(tableView);
     tableView->setItemDelegateForColumn(DetectorSettingsModel::EnableHeightColumn, delegate);

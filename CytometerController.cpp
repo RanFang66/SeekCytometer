@@ -37,6 +37,13 @@ CytometerController::CytometerController(QObject *parent)
 
     QObject::connect(m_udpClient, &UdpCommClient::udpCommEstablished, this, &CytometerController::connect);
     QObject::connect(m_udpClient, &UdpCommClient::udpCommLost, this, &CytometerController::disconnect);
+    QObject::connect(this, &CytometerController::acquisitionStarted, m_udpClient, &UdpCommClient::sendAcquireStart);
+    QObject::connect(this, &CytometerController::acquisitionStopped, m_udpClient, &UdpCommClient::sendAcquireStop);
+    QObject::connect(this, &CytometerController::sortingStarted, m_udpClient, &UdpCommClient::sendSortingStart);
+    QObject::connect(this, &CytometerController::sortingStopped, m_udpClient, &UdpCommClient::sendSortingStop);
+
+    QObject::connect(DetectorSettingsModel::instance(), &DetectorSettingsModel::dataChanged, m_udpClient, &UdpCommClient::sendDetectorSettings);
+
 
     unconnectedState->addTransition(this, &CytometerController::connected, idleState);
     idleState->addTransition(this, &CytometerController::acquisitionStarted, acquiringState);
