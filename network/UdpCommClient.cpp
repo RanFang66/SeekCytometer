@@ -214,34 +214,61 @@ void UdpCommClient::parseHandshakeFrame(const QByteArray &data)
 
 void UdpCommClient::parseSampleData(const QByteArray &data)
 {
+
+
     QVector<SampleData> sampleData;
     QDataStream stream(data);
 
-    quint16 numSamples = 0;
-    if (stream.atEnd()) {
-        qWarning() << "[UdpCommClient] No sample data in the frame!";
-        return;
-    }
+    int eventCount = 0;
 
-    stream >> numSamples;
-    // Check data length is correct
-    int expectedDataLength = numSamples * DataManager::instance().getSampleRecordByteSize();
-    if (data.size() != expectedDataLength + sizeof(quint16)) {
-        qWarning() << "[UdpCommClient] Incorrect sample data length!";
-        return;
-    }
+    quint32 header;
+    quint32 eventId;
+    quint32 channelMask;
+    quint32 magicWord;
+    while (!stream.atEnd()) {
+        stream >> header;
+        eventId  = header & 0x00FFFFFF;
+        channelMask = (header >> 24) & 0x00FF;
 
-    sampleData.reserve(numSamples);
-    for (int i = 0; i < numSamples; ++i) {
         SampleData oneSample = DataManager::instance().getEmptySampleRecord();
         for (int j = 0; j < oneSample.size(); ++j) {
             for (int k = 0; k < oneSample.at(j).size(); ++k) {
                 stream >> oneSample[j][k];
             }
         }
-        sampleData.push_back(oneSample);
+
+        stream >> magicWord;
+        sampleData.append(oneSample);
     }
     emit sampleDataReady(sampleData);
+
+    // QVector<SampleData> sampleData;
+    // QDataStream stream(data);
+    // quint16 numSamples = 0;
+    // if (stream.atEnd()) {
+    //     qWarning() << "[UdpCommClient] No sample data in the frame!";
+    //     return;
+    // }
+
+    // stream >> numSamples;
+    // // Check data length is correct
+    // int expectedDataLength = numSamples * DataManager::instance().getSampleRecordByteSize();
+    // if (data.size() != expectedDataLength + sizeof(quint16)) {
+    //     qWarning() << "[UdpCommClient] Incorrect sample data length!";
+    //     return;
+    // }
+
+    // sampleData.reserve(numSamples);
+    // for (int i = 0; i < numSamples; ++i) {
+    //     SampleData oneSample = DataManager::instance().getEmptySampleRecord();
+    //     for (int j = 0; j < oneSample.size(); ++j) {
+    //         for (int k = 0; k < oneSample.at(j).size(); ++k) {
+    //             stream >> oneSample[j][k];
+    //         }
+    //     }
+    //     sampleData.push_back(oneSample);
+    // }
+    // emit sampleDataReady(sampleData);
 }
 
 

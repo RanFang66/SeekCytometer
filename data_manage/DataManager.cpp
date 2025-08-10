@@ -13,15 +13,18 @@ void DataManager::initDataManager(const QVector<DetectorSettings> &settings)
     for (const DetectorSettings &setting : settings) {
         m_enabledChannels.append(setting.detectorId());
         QVector<MeasurementType> types;
-        if (setting.isEnabledHeight()) {
-            types.append(MeasurementType::Height);
-        }
-        if (setting.isEnabledWidth()) {
-            types.append(MeasurementType::Width);
-        }
-        if (setting.isEenabledArea()) {
-            types.append(MeasurementType::Area);
-        }
+        types.append(MeasurementType::Height);
+        types.append(MeasurementType::Width);
+        types.append(MeasurementType::Area);
+        // if (setting.isEnabledHeight()) {
+        //     types.append(MeasurementType::Height);
+        // }
+        // if (setting.isEnabledWidth()) {
+        //     types.append(MeasurementType::Width);
+        // }
+        // if (setting.isEenabledArea()) {
+        //     types.append(MeasurementType::Area);
+        // }
         m_measurementTypesPerChannel.append(types);
     }
     m_sampleData.init(getEmptySampleRecord());

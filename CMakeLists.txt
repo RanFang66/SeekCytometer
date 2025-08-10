@@ -109,6 +109,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         data_visualization/WaveformView.cpp data_visualization/WaveformView.h
         data_visualization/Waveform.cpp data_visualization/Waveform.h
         widgets/WaveformWidget.cpp widgets/WaveformWidget.h
+        data_manage/EventDataManager.h data_manage/EventDataManager.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET SeekCytometer APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
