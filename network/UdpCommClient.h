@@ -24,6 +24,7 @@ public:
 
     void     startUdpClient();
 
+
 public slots:
     /**
      * @brief Initializes and binds the UDP socket in its own thread.
@@ -43,7 +44,7 @@ public slots:
      */
     bool sendFrame(CommCmdType commandType, const QByteArray &data);
     bool sendHandshake();
-    bool sendWaveformRequest(bool enabled, const QList<int> &enabledChannels);
+    bool sendWaveformRequest(bool enabled, int enabledChannels, int interval);
     bool sendAcquireStart();
     bool sendAcquireStop();
     bool sendSortingStart();
@@ -53,7 +54,7 @@ public slots:
     bool sendDisableDetector(int id);
 
 private slots:
-    void onHandshakeTimerTimeon();
+    void onHandshakeTimerTimeout();
 
 signals:
     /**
@@ -72,7 +73,7 @@ signals:
 
     void sampleDataReady(QVector<SampleData> data);
     void handshakeReceived(const QHostAddress &sender, quint16 senderPort);
-    void waveformDataReceived(const QVector<QVector<int>> &data);
+    void waveformDataReceived(const QVector<int> &data);
 
     void udpCommEstablished();
     void udpCommLost();
@@ -104,6 +105,7 @@ private:
     quint16         m_sequenceReceived;     ///< Sequence value received from SoC
     quint16         m_sequenceReceivedLast; ///< Sequence value received from SoC in last time
     QTimer          *m_handshakeTimer;      ///< Timer for handshake frame
+
 
     void parseHandshakeFrame(const QByteArray &data);
     void parseWaveformFrame(const QByteArray &data);

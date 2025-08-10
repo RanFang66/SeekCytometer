@@ -5,6 +5,9 @@
 #include "WorkSheetWidget.h"
 #include "TestDataGenerator.h"
 
+#include "WaveformWidget.h"
+
+
 CytometerController::CytometerController(QObject *parent)
     : QObject{parent}, m_udpClientThread(new QThread(this)), m_udpClient(new UdpCommClient())
 {
@@ -35,6 +38,8 @@ CytometerController::CytometerController(QObject *parent)
     QObject::connect(errorState, &QState::exited, this, &CytometerController::onExitErrorState);
 
 
+
+
     QObject::connect(m_udpClient, &UdpCommClient::udpCommEstablished, this, &CytometerController::connect);
     QObject::connect(m_udpClient, &UdpCommClient::udpCommLost, this, &CytometerController::disconnect);
     QObject::connect(this, &CytometerController::acquisitionStarted, m_udpClient, &UdpCommClient::sendAcquireStart);
@@ -43,6 +48,9 @@ CytometerController::CytometerController(QObject *parent)
     QObject::connect(this, &CytometerController::sortingStopped, m_udpClient, &UdpCommClient::sendSortingStop);
 
     QObject::connect(DetectorSettingsModel::instance(), &DetectorSettingsModel::dataChanged, m_udpClient, &UdpCommClient::sendDetectorSettings);
+
+    QObject::connect(WaveformWidget::instance(), &WaveformWidget::waveformStateChanged, m_udpClient, &UdpCommClient::sendWaveformRequest);
+    QObject::connect(m_udpClient, &UdpCommClient::waveformDataReceived, WaveformWidget::instance(), &WaveformWidget::onReceivedWaveform);
 
 
     unconnectedState->addTransition(this, &CytometerController::connected, idleState);
@@ -119,6 +127,7 @@ void CytometerController::triggerError()
 {
     emit errorOccurred();
 }
+
 
 void CytometerController::onEnterAccquiringState()
 {

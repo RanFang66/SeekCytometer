@@ -106,6 +106,9 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         network/UdpCommClient.h network/UdpCommClient.cpp
         dialogs/UserManageDialog.h dialogs/UserManageDialog.cpp
         widgets/SortingWidget.h widgets/SortingWidget.cpp
+        data_visualization/WaveformView.cpp data_visualization/WaveformView.h
+        data_visualization/Waveform.cpp data_visualization/Waveform.h
+        widgets/WaveformWidget.cpp widgets/WaveformWidget.h
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET SeekCytometer APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

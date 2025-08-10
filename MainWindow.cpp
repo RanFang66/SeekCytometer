@@ -8,6 +8,7 @@
 #include "User.h"
 #include "CytometerController.h"
 #include "SortingWidget.h"
+#include "WaveformWidget.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -35,7 +36,6 @@ MainWindow::MainWindow(QWidget *parent)
         statusBar->updateConnectInfo(StatusIndicator::STATUS_FAULT, tr("Fault"));
         QMessageBox::critical(this, tr("Fault!"), tr("There is critical fault"));
     });
-
 
 
     // QTimer::singleShot(1000, this, [this]() {
@@ -92,6 +92,8 @@ void MainWindow::initDockWidgets()
 
     // WorkSheetWidget *workSheetWidget = new WorkSheetWidget("WorkSheet", this);
     splitDockWidget(cytometerSettingsWidget, WorkSheetWidget::instance(), Qt::Horizontal);
+    tabifyDockWidget(WorkSheetWidget::instance(), WaveformWidget::instance());
+
 
     DataAcquisitionWidget *acquisitionWidget = new DataAcquisitionWidget("Acquisition Control", this);
     splitDockWidget(cytometerSettingsWidget, acquisitionWidget, Qt::Vertical);

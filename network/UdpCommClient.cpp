@@ -13,7 +13,7 @@ UdpCommClient::UdpCommClient(QObject *parent)
     m_handshakeTimer->setInterval(2000);
     m_handshakeTimer->stop();
 
-    connect(m_handshakeTimer, &QTimer::timeout, this, &UdpCommClient::onHandshakeTimerTimeon);
+    connect(m_handshakeTimer, &QTimer::timeout, this, &UdpCommClient::onHandshakeTimerTimeout);
 
     m_remoteAddress = QHostAddress("192.168.8.10");
     m_remotePort = 5001;
@@ -59,17 +59,19 @@ bool UdpCommClient::sendHandshake()
     return sendFrame(CommCmdType::CMD_HAND_SHAKE, QByteArray());
 }
 
-bool UdpCommClient::sendWaveformRequest(bool enabled, const QList<int> &enabledChannels)
+bool UdpCommClient::sendWaveformRequest(bool enabled, int enabledChannels, int interval)
 {
     QByteArray data;
 
-    quint8 enableCh = 0;
-    for (int val : enabledChannels) {
-        enableCh |=  (0x01 << (val - 1));
-    }
+    // quint8 enableCh = 0;
+    // for (int val : enabledChannels) {
+    //     enableCh |=  (0x01 << (val - 1));
+    // }
 
     data.append(static_cast<char>(enabled));
-    data.append(static_cast<char>(enableCh));
+    data.append(static_cast<char>(enabledChannels & 0x00ff));
+    data.append(static_cast<char>(interval & 0x00ff));
+
     return sendFrame(CommCmdType::CMD_WAVEFORM_DATA, data);
 }
 
@@ -126,7 +128,7 @@ bool UdpCommClient::sendDisableDetector(int id)
     }
 }
 
-void UdpCommClient::onHandshakeTimerTimeon()
+void UdpCommClient::onHandshakeTimerTimeout()
 {
     /*
      * If there is no frame send to SoC between this timer interval, then send handshake frame
@@ -245,32 +247,40 @@ void UdpCommClient::parseSampleData(const QByteArray &data)
 
 void UdpCommClient::parseWaveformFrame(const QByteArray &data)
 {
-    QVector<QVector<int>> waveform;
+    // QVector<QVector<int>> waveform;
+    // QDataStream stream(data);
+    // int numWaveforms = 0;
+    // quint16 enabledChannels = 0;
+    // stream >> numWaveforms;
+    // stream >> enabledChannels;
+    // QList<int> enabledChannelsList;
+    // for (int i = 0; i < 8; ++i) {
+    //     if (enabledChannels & (1 << i)) {
+    //         enabledChannelsList.push_back(i);
+    //     }
+    // }
+    // waveform.resize(numWaveforms);
+    // for (int i = 0; i < numWaveforms; i++) {
+    //     waveform[i].resize(enabledChannelsList.size());
+    // }
+    // int expectedDataLength = numWaveforms * enabledChannelsList.size() * sizeof(int);
+    // if (data.size() != expectedDataLength + sizeof(int) + sizeof(quint16)) {
+    //     qWarning() << "[UdpCommClient] Incorrect waveform data length!";
+    //     return;
+    // }
+
+    // for (int i = 0; i < numWaveforms; i++) {
+    //     for (int j = 0; j < enabledChannelsList.size(); j++) {
+    //         stream >> waveform[i][j];
+    //     }
+    // }
+    QVector<int> waveform;
     QDataStream stream(data);
-    int numWaveforms = 0;
-    quint16 enabledChannels = 0;
-    stream >> numWaveforms;
-    stream >> enabledChannels;
-    QList<int> enabledChannelsList;
-    for (int i = 0; i < 8; ++i) {
-        if (enabledChannels & (1 << i)) {
-            enabledChannelsList.push_back(i);
-        }
-    }
-    waveform.resize(numWaveforms);
-    for (int i = 0; i < numWaveforms; i++) {
-        waveform[i].resize(enabledChannelsList.size());
-    }
-    int expectedDataLength = numWaveforms * enabledChannelsList.size() * sizeof(int);
-    if (data.size() != expectedDataLength + sizeof(int) + sizeof(quint16)) {
-        qWarning() << "[UdpCommClient] Incorrect waveform data length!";
-        return;
+    while (!stream.atEnd()) {
+        int value;
+        stream >> value;
+        waveform.append(value);
     }
 
-    for (int i = 0; i < numWaveforms; i++) {
-        for (int j = 0; j < enabledChannelsList.size(); j++) {
-            stream >> waveform[i][j];
-        }
-    }
     emit waveformDataReceived(waveform);
 }

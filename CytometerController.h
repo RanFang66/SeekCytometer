@@ -50,6 +50,7 @@ private slots:
     void onEnterErrorState();
     void onExitErrorState();
 
+
     // void initUdpClient();
 
 private:
@@ -68,8 +69,6 @@ private:
     QState *sortingState;
     QState *errorState;
 
-
-    QTimer *commTimer;
 };
 
 #endif // CYTOMETERCONTROLLER_H
