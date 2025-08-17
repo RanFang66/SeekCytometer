@@ -4,6 +4,9 @@
 #include <QHBoxLayout>
 #include <QGridLayout>
 
+#include <GatesDAO.h>
+#include <DetectorSettingsDAO.h>
+#include "CytometerController.h"
 
 SortingWidget::SortingWidget(const QString &tilte, QWidget *parent)
     : QDockWidget{tilte, parent}
@@ -19,22 +22,25 @@ void SortingWidget::initSortingWidget()
     QGroupBox *groupStatus = new QGroupBox(tr("Sort Status"), this);
 
 
-    btnRunSorting = new QPushButton(tr("Run"));
+    btnRunSorting = new QPushButton(tr("Start Sort"));
     btnPauseSorting = new QPushButton(tr("Pause"));
     editDriveWidth = new QLineEdit("100", this);
     // editDriveStrength = new QLineEdit("5000", this);
     editCoolingTime = new QLineEdit("200", this);
     editDriveDealy = new QLineEdit("100", this);
     comboDriveMode = new QComboBox(this);
-    comboDriveMode->addItem(tr("Level Trig"));
-    comboDriveMode->addItem(tr("Edge Trig"));
+    comboDriveMode->addItem(tr("Level Trig"), 0);
+    comboDriveMode->addItem(tr("Edge Trig"), 1);
     // cBoxContinousMode = new QCheckBox(tr("Continous Mode"), this);
     comboSortMode = new QComboBox(this);
     comboSortMode->addItem(tr("Continous Mode"));
     comboSortMode->addItem(tr("Target Events"));
     editTargetEvents = new QLineEdit("10000", this);
+    editTargetEvents->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+
     comboPopulation = new QComboBox(this);
-    comboPopulation->addItem(tr("All"));
+    comboPopulation->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+    comboPopulation->addItem(tr("All"),0);
 
 
     QGridLayout *driveLayout = new QGridLayout(groupDrive);
@@ -94,4 +100,72 @@ void SortingWidget::initSortingWidget()
     mainWidget->setLayout(mainLayout);
 
     setWidget(mainWidget);
+
+
+    connect(btnRunSorting, &QPushButton::clicked, this, &SortingWidget::startSorting);
+    connect(comboDriveMode, &QComboBox::currentIndexChanged, this, &SortingWidget::changeDriveParameters);
+    connect(editCoolingTime, &QLineEdit::editingFinished, this, &SortingWidget::changeDriveParameters);
+    connect(editDriveWidth, &QLineEdit::editingFinished, this, &SortingWidget::changeDriveParameters);
+    connect(editDriveDealy, &QLineEdit::editingFinished, this, &SortingWidget::changeDriveParameters);
+
+    connect(comboPopulation, &QComboBox::currentIndexChanged, this, &SortingWidget::changeGate);
 }
+
+void SortingWidget::updatePopulation(int workSheetId)
+{
+    comboPopulation->clear();
+    QList<Gate> gateList = GatesDAO().fetchGates(workSheetId);
+    for (const Gate &gate : gateList) {
+        comboPopulation->addItem(gate.name(), gate.id());
+    }
+    comboPopulation->addItem("All", 0);
+}
+
+const Gate SortingWidget::getCurrentPopulation() const
+{
+    int id = comboPopulation->currentData().toInt();
+
+    if (id == 0) {
+        return Gate();
+    }
+    return GatesDAO().fetchGate(id);
+}
+
+void SortingWidget::changeDriveParameters()
+{
+    m_driveType = comboDriveMode->currentData().toInt();
+    m_driveDelay = editDriveDealy->text().toInt();
+    m_driveWidth = editDriveWidth->text().toInt();
+    m_coolingTime = editCoolingTime->text().toInt();
+
+    emit driveParametersChanged(m_driveType, m_driveDelay, m_driveWidth, m_coolingTime);
+}
+
+void SortingWidget::changeGate()
+{
+    int id = comboPopulation->currentData().toInt();
+    int detectorX = 0;
+    int detectorY = 0;
+    if (id == 0) {
+        m_currGate = Gate();
+    } else {
+        m_currGate = GatesDAO().fetchGate(id);
+        detectorX = DetectorSettingsDAO().getSettingDetectorId(m_currGate.xAxisSettingId());
+        detectorY = DetectorSettingsDAO().getSettingDetectorId(m_currGate.yAxisSettingId());
+    }
+    emit gateChanged(m_currGate, detectorX, detectorY);
+}
+
+void SortingWidget::startSorting()
+{
+    if (btnRunSorting->text() == tr("Start Sort")) {
+        btnRunSorting->setText(tr("Stop Sort"));
+        CytometerController::instance()->startSorting();
+    } else {
+        btnRunSorting->setText(tr("Start Sort"));
+        CytometerController::instance()->stopSorting();
+    }
+}
+
+
+

@@ -37,8 +37,8 @@ public:
 
 
 private:
-    static constexpr int        AXIS_TITLE_MARGIN = 5;
-    static constexpr int        AXIS_TICK_MARGIN = 5;
+    static constexpr int        AXIS_TITLE_MARGIN = 10;
+    static constexpr int        AXIS_TICK_MARGIN = 10;
     Qt::Orientation         m_orientation;
     Qt::Alignment           m_alignment;
     double                  m_minValue;

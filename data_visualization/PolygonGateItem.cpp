@@ -2,9 +2,22 @@
 #include <QPainter>
 
 PolygonGateItem::PolygonGateItem(const QPointF &startPoint, PlotBase *parent)
-    : GateItem(startPoint, parent)
+    : GateItem(GateType::PolygonGate, startPoint, parent)
 {
     m_polygon << QPointF(0, 0);
+}
+
+PolygonGateItem::PolygonGateItem(const Gate &gate, PlotBase *parent)
+    : GateItem{gate, parent}
+{
+    // QPointF p1 = m_parent->mapPointToPlotArea(gate.points().at(0));
+    // QPointF p2 = m_parent->mapPointToPlotArea(gate.points().at(1));
+
+    // m_boundingRect = QRectF(p1, p2);
+    for (const QPointF &p : gate.points()) {
+        QPointF point = m_parent->mapPointToPlotArea(p);
+        m_polygon << point;
+    }
 }
 
 void PolygonGateItem::updatePolygon(const QPointF &point)
@@ -73,5 +86,7 @@ void PolygonGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
         painter->drawPolyline(m_polygon);
         painter->drawLine(m_polygon.last(), m_previewPos);
     }
+
+    painter->drawText(boundingRect(), Qt::AlignLeft|Qt::AlignTop, m_gate.name());
     painter->restore();
 }

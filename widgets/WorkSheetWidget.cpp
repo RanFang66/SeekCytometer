@@ -8,7 +8,7 @@
 #include "DataManager.h"
 #include "GatesDAO.h"
 #include <QInputDialog>
-
+#include "SortingWidget.h"
 WorkSheetWidget::WorkSheetWidget(const QString &title, QWidget *parent)
     : QDockWidget{title, parent}, m_updateTimer(new QTimer(this)), m_active(false), m_updateInterval(1000)
 {
@@ -39,15 +39,39 @@ bool WorkSheetWidget::isActive() const
 
 void WorkSheetWidget::addWorkSheetView(int worksheetId)
 {
+    if (m_activedWorksheetId.contains(worksheetId))
+        return;
+
+
+
+    SortingWidget::instance()->updatePopulation(worksheetId);
+    m_activedWorksheetId.append(worksheetId);
     WorkSheet workSheet = WorkSheetsDAO().fetchWorkSheet(worksheetId);
     WorkSheetView *workSheetView = new WorkSheetView(workSheet);
     tabWidget->addTab(workSheetView, workSheet.name());
     currentWorkSheetView = workSheetView;
     currentWorkSheetScene = workSheetView->scene();
     connect(currentWorkSheetScene, &WorkSheetScene::finishedDrawingGate, this, &WorkSheetWidget::onFinishedDrawingGate);
+
+
+    // for (const Gate& gate : GatesDAO().fetchGates(worksheetId)) {
+    //     GatesDAO().deleteGate(gate.id());
+    // }
+
     QList<Plot> plotList = PlotsDAO().fetchPlots(worksheetId);
+    QList<Gate> gateList = GatesDAO().fetchGates(worksheetId);
+
+
     for (const Plot &plot : plotList) {
-        workSheetView->scene()->addNewPlot(plot.plotType(), plot);
+        PlotBase *plotBase = workSheetView->scene()->addNewPlot(plot.plotType(), plot);
+        if (plotBase) {
+            for (const Gate &gate : gateList) {
+                if (gate.xAxisSettingId() == plot.axisXId() && gate.yAxisSettingId() == plot.axisYId()
+                    && gate.xMeasurementType() == plot.xMeasurementType() && gate.yMeasurementType() == plot.yMeasurementType()) {
+                    workSheetView->scene()->addNewGate(gate.gateType(), gate, plotBase);
+                }
+            }
+        }
     }
 }
 
@@ -172,6 +196,7 @@ void WorkSheetWidget::addNewPlot(QAction *action)
     PlotType plotType = action->data().value<PlotType>();
     addPlot(plotType);
 }
+
 
 void WorkSheetWidget::addNewGate(QAction *action)
 {

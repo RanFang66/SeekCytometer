@@ -8,6 +8,7 @@ class PolygonGateItem : public GateItem
     Q_OBJECT
 public:
     PolygonGateItem(const QPointF &startPoint, PlotBase *parent = nullptr);
+    PolygonGateItem(const Gate &gate, PlotBase *parent = nullptr);
 
     void updatePolygon(const QPointF &point);
     void updateGatePreview(const QPointF &point) override;

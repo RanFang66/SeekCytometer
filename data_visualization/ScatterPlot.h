@@ -22,7 +22,9 @@ protected:
 
 private:
     ChartBuffer<QPointF>     m_data;
-    static constexpr int    DEFAULT_DATA_LENGTH = 10000;
+    static constexpr int    DEFAULT_DATA_LENGTH = 60000;
+
+    qreal m_xMin, m_xMax, m_yMin, m_yMax;
 };
 
 

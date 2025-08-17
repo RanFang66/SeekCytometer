@@ -6,7 +6,7 @@
 #include <QHostAddress>
 #include <QByteArray>
 #include "UdpCommFrame.h"
-
+#include "gate.h"
 #include <QTimer>
 
 using SampleData = QVector<QVector<int>>;
@@ -51,6 +51,9 @@ public slots:
     bool sendSortingStop();
     bool sendDetectorSettings(const QModelIndex &topLeft, const QModelIndex &bottomRight,
                               const QList<int> &roles = QList<int>());
+    bool sendDriveParameters(int type, int delay, int width, int coolingTime);
+    bool sendGateData(const Gate &gate, int detectorX, int detectorY);
+
     bool sendDisableDetector(int id);
 
 private slots:

@@ -9,8 +9,8 @@ ScatterPlot::ScatterPlot(const Plot &plot, QGraphicsItem *parent)
 {
     setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable | ItemClipsToShape);
 
-    m_xAxis->setRange(0, 131072);
-    m_yAxis->setRange(0, 131072);
+    m_xAxis->setRange(5000, 80000);
+    m_yAxis->setRange(5000, 80000);
 
     m_xAxis->setTicks(5);
     m_yAxis->setTicks(5);
@@ -24,6 +24,28 @@ void ScatterPlot::updateData(const QVector<QPointF> &data)
 {
     if (data.isEmpty()) return;
     m_data.writeMultiple(data);
+    m_xMin = m_xAxis->minValue();
+    m_xMax = m_xAxis->maxValue();
+    m_yMin = m_yAxis->minValue();
+    m_yMax = m_yAxis->maxValue();
+    QRectF plotRange(QPointF(m_xMin, m_yMax), QPointF(m_xMax, m_yMin));
+    for (const QPointF &p : data) {
+        if (!plotRange.contains(p)) {
+            m_xMin = m_xMin > p.x() ? p.x() : m_xMin;
+            m_xMax = m_xMax < p.x() ? p.x() : m_xMax;
+            m_yMin = m_yMin > p.y() ? p.y() : m_yMin;
+            m_yMax = m_yMax < p.y() ? p.y() : m_yMax;
+        }
+    }
+    if (m_xMin != m_xAxis->minValue() || m_xMax != m_xAxis->maxValue()) {
+        m_xAxis->setRange(m_xMin * 0.9, m_xMax * 1.1);
+    }
+
+    if (m_yMin != m_yAxis->minValue() || m_yMax != m_yAxis->maxValue()) {
+        m_yAxis->setRange(m_yMin * 0.9, m_yMax * 1.1);
+    }
+
+
     update();
 }
 

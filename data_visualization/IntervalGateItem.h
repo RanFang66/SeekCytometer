@@ -8,6 +8,7 @@ class IntervalGateItem : public GateItem
     Q_OBJECT
 public:
     IntervalGateItem(const QPointF &startPointInPlot, PlotBase *parent = nullptr);
+    IntervalGateItem(const Gate &gate, PlotBase *parent = nullptr);
 
     void updateGatePreview(const QPointF &point) override;
     void finishDrawing(const QPointF &point) override;

@@ -178,6 +178,11 @@ void WaveformWidget::onAddThresholdLine(bool checked)
     }
 }
 
+WaveformWidget::~WaveformWidget()
+{
+    deleteLater();
+}
+
 void WaveformWidget::onReceivedWaveform(const QList<int> &data)
 {
     waveView->addSeriesData(data);

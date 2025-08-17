@@ -12,7 +12,8 @@ class GateItem : public QGraphicsObject
 {
     Q_OBJECT
 public:
-    explicit GateItem(const QPointF &m_startPos, PlotBase *parent = nullptr);
+    explicit GateItem(GateType type, const QPointF &m_startPos, PlotBase *parent = nullptr);
+    explicit GateItem(const Gate &gate, PlotBase *parent = nullptr);
 
     const Gate  &gate() const { return m_gate; }
     void    setGateName(const QString &name) { m_gate.setName(name); }

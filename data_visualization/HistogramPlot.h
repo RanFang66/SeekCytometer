@@ -21,11 +21,13 @@ protected:
     void            paintPlot(QPainter *painter) override;
 
 private:
-    static constexpr int DEFAULT_DATA_LENGTH = 10000;
+    static constexpr int DEFAULT_DATA_LENGTH = 60000;
 
     ChartBuffer<qreal>      m_data;
     QList<int>              m_bins;
     int                     m_maxValue;
+    qreal                   m_xMinVal;
+    qreal                   m_xMaxVal;
 };
 
 #endif // HISTOGRAMPLOT_H

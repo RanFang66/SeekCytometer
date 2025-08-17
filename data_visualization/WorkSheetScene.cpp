@@ -3,6 +3,10 @@
 #include "GateItemFactory.h"
 #include "HistogramPlot.h"
 #include "ScatterPlot.h"
+#include "PlotsDAO.h"
+#include <QMessageBox>
+#include "WorkSheetWidget.h"
+
 
 WorkSheetScene::WorkSheetScene(QObject *parent)
     : QGraphicsScene{parent}, m_drawState{DrawingState::DrawingIdle}, m_gateType(GateType::UnknownGate), m_activePlot{nullptr}, m_gateItem{nullptr}
@@ -31,26 +35,31 @@ void WorkSheetScene::finishDrawingGate(bool ok)
     m_drawState = DrawingState::DrawingIdle;
 }
 
-void WorkSheetScene::addNewPlot(PlotType plotType, const Plot &plot)
+PlotBase *WorkSheetScene::addNewPlot(PlotType plotType, const Plot &plot)
 {
     qDebug() << "Add New Plot, type: " << Plot::plotTypeToString(plotType)
     << "X Axis: " << plot.axisXDetectorId() << MeasurementTypeHelper::measurementTypeToString(plot.xMeasurementType())
     << "Y Axis: " << plot.axisYDetectorId() << MeasurementTypeHelper::measurementTypeToString(plot.yMeasurementType());
     HistogramPlot *histogramPlot = nullptr;
     ScatterPlot *scatterPlot = nullptr;
+    PlotBase *plotBase = nullptr;
     switch (plotType) {
     case PlotType::HISTOGRAM_PLOT:
         histogramPlot = new HistogramPlot(plot);
         if (histogramPlot) {
+            plotBase = (histogramPlot);
             addItem(histogramPlot);
             m_plots.append(static_cast<PlotBase*>(histogramPlot));
+            connect(histogramPlot, &PlotBase::deleteRequested, this, &WorkSheetScene::onDeletePlot);
         }
         break;
     case PlotType::SCATTER_PLOT:
         scatterPlot = new ScatterPlot(plot);
         if (scatterPlot) {
+            plotBase = scatterPlot;
             addItem(scatterPlot);
             m_plots.append(static_cast<PlotBase*>(scatterPlot));
+            connect(scatterPlot, &PlotBase::deleteRequested, this, &WorkSheetScene::onDeletePlot);
         }
         break;
     case PlotType::CONTOUR_PLOT:
@@ -59,6 +68,18 @@ void WorkSheetScene::addNewPlot(PlotType plotType, const Plot &plot)
         break;
     }
     m_plots.last()->setPos(((m_plots.size()-1) % 3) * Plot::defaultPlotSize, ((m_plots.size()-1) / 3) * Plot::defaultPlotSize);
+    update();
+    return plotBase;
+}
+
+void WorkSheetScene::addNewGate(GateType gateType, const Gate &gate, PlotBase *parent)
+{
+    GateItem *gateItem = GateItemFactory::createGateItem(gateType, gate, parent);
+    qDebug() << "Add New Gate, type: " << Gate::gateTypeToString(gateType)
+             << "P1: " << gate.points().at(0) << "P2: " << gate.points().at(1);
+
+    m_gateItems.append(gateItem);
+    update();
 }
 
 
@@ -126,6 +147,18 @@ void WorkSheetScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
         }
     }
     QGraphicsScene::mouseDoubleClickEvent(event);
+}
+
+void WorkSheetScene::onDeletePlot(PlotBase *plot)
+{
+    QMessageBox::StandardButton ret = QMessageBox::question(WorkSheetWidget::instance(), tr("Delete Plot"), tr("Confirm to delelte this Plot?"));
+
+    if (ret == QMessageBox::Yes) {
+        removeItem(plot);
+        m_plots.removeOne(plot);
+        PlotsDAO().deletePlot(plot->plotId());
+        plot->deleteLater();
+    }
 }
 
 

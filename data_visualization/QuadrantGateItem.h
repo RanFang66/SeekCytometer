@@ -8,6 +8,7 @@ class QuadrantGateItem : public GateItem
     Q_OBJECT
 public:
     QuadrantGateItem(const QPointF &origin, PlotBase *parent = nullptr);
+    QuadrantGateItem(const Gate &gate, PlotBase *parent = nullptr);
     void updateGatePreview(const QPointF &origin) override;
     void finishDrawing(const QPointF &origin) override;
     GateType gateType() const override { return GateType::QuadrantGate; }

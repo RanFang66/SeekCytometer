@@ -21,8 +21,11 @@ public:
     void startDrawingGate(GateType gateType);
     bool isDrawingGate() const { return m_drawState != DrawingState::DrawingIdle; }
     void finishDrawingGate(bool ok);
-    void addNewPlot(PlotType plotType, const Plot &plot);
+    PlotBase* addNewPlot(PlotType plotType, const Plot &plot);
+    void addNewGate(GateType gateType, const Gate &gate, PlotBase *parent);
+
     QList<PlotBase*> plots() const { return m_plots; }
+    QList<GateItem*> gates() const {return m_gateItems;}
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
@@ -33,6 +36,9 @@ protected:
 
 signals:
     void finishedDrawingGate(GateItem *gateItem);
+
+private slots:
+    void onDeletePlot(PlotBase *plot);
 
 private:
     DrawingState    m_drawState;

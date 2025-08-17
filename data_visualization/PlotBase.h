@@ -47,10 +47,14 @@ public:
     QPointF limitPointInPlot(const QPointF &point) const;
     QPointF limitScenePointInPlot(const QPointF &point) const;
 
+signals:
+    void deleteRequested(PlotBase *plot);
+
 protected:
     void updateLayout();
     void paintTitle(QPainter *painter);;
     void paintAxis(QPainter *painter);
+    void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
 
     virtual void paintPlot(QPainter *painter) = 0;
     QRectF boundingRect() const override;
@@ -72,8 +76,8 @@ protected:
 
     QFont m_titleFont;
 
-    static constexpr qreal PLOT_MARGIN = 5.0;
-    static constexpr qreal TITLE_MARGIN = 5.0;
+    static constexpr qreal PLOT_MARGIN = 10.0;
+    static constexpr qreal TITLE_MARGIN = 10.0;
 };
 
 

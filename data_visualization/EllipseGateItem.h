@@ -8,6 +8,7 @@ class EllipseGateItem : public GateItem
     Q_OBJECT
 public:
     EllipseGateItem(const QPointF &startPosInPlot, PlotBase *parent = nullptr);
+    EllipseGateItem(const Gate &gate, PlotBase *parent = nullptr);
     void updateGatePreview(const QPointF &point) override;
     void finishDrawing(const QPointF &point) override;
     QRectF boundingRect() const override;

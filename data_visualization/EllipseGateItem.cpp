@@ -2,9 +2,18 @@
 #include <QPainter>
 
 EllipseGateItem::EllipseGateItem(const QPointF &startPosInPlot, PlotBase *parent)
-    : GateItem(startPosInPlot, parent)
+    : GateItem(GateType::EllipseGate, startPosInPlot, parent)
 {
     m_ellipse = QRectF(0, 0, 0, 0);
+}
+
+EllipseGateItem::EllipseGateItem(const Gate &gate, PlotBase *parent)
+    : GateItem{gate, parent}
+{
+    QPointF p1 = m_parent->mapPointToPlotArea(gate.points().at(0));
+    QPointF p2 = m_parent->mapPointToPlotArea(gate.points().at(1));
+
+    m_ellipse = QRectF(p1, p2);
 }
 
 void EllipseGateItem::updateGatePreview(const QPointF &point)
@@ -35,6 +44,7 @@ void EllipseGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
         painter->setPen(QPen(Qt::blue, 2, Qt::DashDotLine));
         painter->drawEllipse(m_ellipse);
     }
+    painter->drawText(boundingRect(), Qt::AlignLeft|Qt::AlignTop, m_gate.name());
 
     painter->restore();
 }

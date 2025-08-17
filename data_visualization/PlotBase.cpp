@@ -3,7 +3,8 @@
 #include <QMarginsF>
 #include <QFontMetrics>
 #include <QGraphicsSceneMouseEvent>
-
+#include <QMenu>
+#include <QAction>
 
 PlotBase::PlotBase(const Plot &plot, QGraphicsItem *parent)
 : QGraphicsObject{parent}, m_plot{plot}
@@ -22,7 +23,7 @@ PlotBase::PlotBase(const Plot &plot, QGraphicsItem *parent)
     m_title = m_plot.plotName();
     m_titleFont = QFont("Arial", 12);
 
-    m_boundingRect = QRectF(0, 0, 400, 400);
+    m_boundingRect = QRectF(0, 0, 450, 450);
     updateLayout();
 }
 
@@ -60,7 +61,7 @@ void PlotBase::setAxisYName(const QString &name)
 
 void PlotBase::updateLayout()
 {
-    QRectF validArea = m_boundingRect.marginsRemoved(QMarginsF(PLOT_MARGIN, PLOT_MARGIN, PLOT_MARGIN, PLOT_MARGIN));
+    QRectF validArea = m_boundingRect.marginsRemoved(QMarginsF(PLOT_MARGIN, PLOT_MARGIN, PLOT_MARGIN + 10, PLOT_MARGIN));
 
     QFontMetrics fm(m_titleFont);
     qreal titleHeight = fm.height() + TITLE_MARGIN;
@@ -116,7 +117,7 @@ void PlotBase::paintAxis(QPainter *painter)
         double val = m_xAxis->minValue() + i * xTickInterval;
         qreal posX = m_plotArea.left() + (val - m_xAxis->minValue()) * xRatio;
         painter->drawLine(QPointF(posX, m_axisXArea.top()), QPointF(posX, m_axisXArea.top() + 8));
-        painter->drawText(QRectF(posX - 20, m_axisXArea.top() + 8, 40, 20), Qt::AlignCenter, QString::number(val));
+        painter->drawText(QRectF(posX - 20, m_axisXArea.top() + 8, 40, 20), Qt::AlignCenter, QString::number((int)val));
     }
 
     // Draw X Axis Title Under the Axis
@@ -133,16 +134,29 @@ void PlotBase::paintAxis(QPainter *painter)
         double val = m_yAxis->minValue() + i * yTickInterval;
         qreal posY = m_plotArea.bottom() - (val - m_yAxis->minValue()) * yRatio;
         painter->drawLine(QPointF(m_axisYArea.right(), posY), QPointF(m_axisYArea.right() - 8, posY));
-        painter->drawText(QRectF(m_axisYArea.right() - 40, posY - 10, 40, 20), Qt::AlignCenter, QString::number(val));
+        painter->drawText(QRectF(m_axisYArea.right() - 50, posY - 15, 50, 20), Qt::AlignCenter, QString::number((int)val));
     }
 
     // Draw Y Axis Title At the Left of the Axis in Vertical Direction
     painter->save();
     painter->rotate(-90);
-    painter->drawText(QRectF(-m_axisYArea.bottom(), m_axisYArea.left(), m_axisYArea.height(), 40), Qt::AlignCenter, m_yAxis->axisName());
+    painter->drawText(QRectF(-m_axisYArea.bottom(), m_axisYArea.left()-10, m_axisYArea.height(), 40), Qt::AlignCenter, m_yAxis->axisName());
     painter->restore();
 
     painter->restore();
+}
+
+void PlotBase::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
+{
+    QMenu menu;
+    QAction *deleteAction = menu.addAction("Delete Plot");
+    QAction *selectedAction = menu.exec(event->screenPos());
+
+    if (selectedAction == deleteAction) {
+        emit deleteRequested(this);
+    }
+
+    event->accept();
 }
 
 qreal PlotBase::mapValueToXAixs(qreal value) const

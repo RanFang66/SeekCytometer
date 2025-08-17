@@ -2,10 +2,19 @@
 #include <QPainter>
 
 QuadrantGateItem::QuadrantGateItem(const QPointF &origin, PlotBase *parent)
-    : GateItem(origin, parent), m_origin(mapFromParent(origin))
+    : GateItem(GateType::QuadrantGate, origin, parent), m_origin(mapFromParent(origin))
 {
     setPos(parent->plotArea().topLeft());
     m_boundingRect = QRectF(0, 0, parent->plotArea().width(), parent->plotArea().height());
+}
+
+QuadrantGateItem::QuadrantGateItem(const Gate &gate, PlotBase *parent)
+    : GateItem{gate, parent}
+{
+    setPos(parent->plotArea().topLeft());
+    m_boundingRect = QRectF(0, 0, parent->plotArea().width(), parent->plotArea().height());
+    QPointF p = m_parent->mapPointToPlotArea(gate.points().at(0));
+    m_origin = p;
 }
 
 void QuadrantGateItem::updateGatePreview(const QPointF &origin)
@@ -53,6 +62,9 @@ void QuadrantGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
         painter->drawLine(m_origin.x(), 0, m_origin.x(), m_boundingRect.height());
         painter->drawEllipse(m_origin, 3, 3);
     }
+
+    painter->drawText(boundingRect(), Qt::AlignLeft|Qt::AlignTop, m_gate.name());
+
     painter->restore();
 }
 

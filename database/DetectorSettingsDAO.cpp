@@ -172,4 +172,20 @@ bool DetectorSettingsDAO::isDetectorSettingsExists(int settingId, const QString 
     return query.next();
 }
 
+int DetectorSettingsDAO::getSettingDetectorId(int detectorSettingId)
+{
+    int id = 0;
+    QSqlQuery query(m_db);
+    query.prepare("SELECT detector_id FROM DetectorSettings WHERE detector_setting_id = :detector_setting_id");
+    query.bindValue(":detector_setting_id", detectorSettingId);
+    if (!query.exec() ) {
+        handleError(__FUNCTION__, query);
+        return 0;
+    }
+    if (query.next()) {
+        id = query.value(0).toInt();
+    }
+    return id;
+}
+
 

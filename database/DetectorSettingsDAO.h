@@ -37,6 +37,9 @@ public:
     DetectorSettings fetchDetectorSettings(int settingId, int detectorId) const;
     bool isDetectorSettingsExists(int settingId, int detectorId) const;
     bool isDetectorSettingsExists(int settingId, const QString &parameterName) const;
+
+    int getSettingDetectorId(int detectorSettingId);
+
 };
 
 #endif // DETECTORSETTINGSDAO_H

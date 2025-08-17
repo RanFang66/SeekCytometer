@@ -94,7 +94,7 @@ public:
     }
 
 private:
-    static constexpr int DefaultSize = 1000;
+    static constexpr int DefaultSize = 4000;
     QVector<T> m_buffer;
     int     m_capacity;
     int     m_size;

@@ -67,6 +67,8 @@ private:
     bool        m_active;
     QTimer      *m_updateTimer;
     int         m_updateInterval;
+
+    QList<int>  m_activedWorksheetId;
 };
 
 #endif // WORKSHEETWIDGET_H

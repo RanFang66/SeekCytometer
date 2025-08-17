@@ -30,6 +30,24 @@ public:
                 return nullptr;
         }
     }
+
+    static GateItem * createGateItem(GateType gateType, const Gate &gate, PlotBase *parent = nullptr)
+    {
+        switch (gateType) {
+        case GateType::RectangleGate:
+            return new RectangleGateItem(gate, parent);
+        case GateType::EllipseGate:
+            return new EllipseGateItem(gate, parent);
+        case GateType::PolygonGate:
+            return new PolygonGateItem(gate, parent);
+        case GateType::IntervalGate:
+            return new IntervalGateItem(gate, parent);
+        case GateType::QuadrantGate:
+            return new QuadrantGateItem(gate, parent);
+        default:
+            return nullptr;
+        }
+    }
 };
 
 #endif // GATEITEMFACTORY_H

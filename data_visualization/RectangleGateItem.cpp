@@ -2,9 +2,18 @@
 #include <QPainter>
 
 RectangleGateItem::RectangleGateItem(const QPointF &startPos, PlotBase *parent)
-    : GateItem{startPos, parent}
+    : GateItem{GateType::RectangleGate, startPos, parent}
 {
     m_rectangle = QRectF(0, 0, 0, 0);
+}
+
+RectangleGateItem::RectangleGateItem(const Gate &gate, PlotBase *parent)
+    : GateItem{gate, parent}
+{
+    QPointF p1 = m_parent->mapPointToPlotArea(gate.points().at(0));
+    QPointF p2 = m_parent->mapPointToPlotArea(gate.points().at(1));
+
+    m_rectangle = QRectF(p1, p2);
 }
 
 void RectangleGateItem::updateGatePreview(const QPointF &point)
@@ -55,5 +64,8 @@ void RectangleGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem 
         painter->setPen(QPen(Qt::blue, 2, Qt::DashDotLine));
         painter->drawRect(m_rectangle);
     }
+
+    painter->drawText(boundingRect(), Qt::AlignLeft|Qt::AlignTop, m_gate.name());
+
     painter->restore();
 }

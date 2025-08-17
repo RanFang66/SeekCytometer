@@ -2,10 +2,19 @@
 #include <QPainter>
 
 IntervalGateItem::IntervalGateItem(const QPointF &startPosInPlot, PlotBase *parent)
-    : GateItem(startPosInPlot, parent)
+    : GateItem(GateType::IntervalGate, startPosInPlot, parent)
 {
     setPos(QPointF(startPosInPlot.x(), parent->plotArea().top()));
     m_boundingRect = QRectF(0, 0, 0, parent->plotArea().height());
+}
+
+IntervalGateItem::IntervalGateItem(const Gate &gate, PlotBase *parent)
+    : GateItem{gate, parent}
+{
+    QPointF p1 = m_parent->mapPointToPlotArea(gate.points().at(0));
+    QPointF p2 = m_parent->mapPointToPlotArea(gate.points().at(1));
+
+    m_boundingRect = QRectF(p1, p2);
 }
 
 void IntervalGateItem::updateGatePreview(const QPointF &point)
@@ -43,6 +52,8 @@ void IntervalGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
         painter->drawLine(m_boundingRect.topLeft(), m_boundingRect.bottomLeft());
         painter->drawLine(m_boundingRect.topRight(), m_boundingRect.bottomRight());
     }
+    painter->drawText(boundingRect(), Qt::AlignLeft|Qt::AlignTop, m_gate.name());
+
     painter->restore();
 }
 

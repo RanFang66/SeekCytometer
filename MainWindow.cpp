@@ -81,7 +81,15 @@ void MainWindow::initDockWidgets()
         delete p;
     }
     setDockNestingEnabled(true);
-
+    setStyleSheet(
+        "QDockWidget {"
+        "   border: 3px solid #0a0a0a;"
+        "}"
+        "QDockWidget::title {"
+        "   background: #e0e0e0;"
+        "   padding: 3px;"
+        "}"
+        );
 
     ExperimentsBrowser *experimentsBrowser = new ExperimentsBrowser("Experiments Browser", this);
     addDockWidget(Qt::LeftDockWidgetArea, experimentsBrowser);
@@ -93,21 +101,25 @@ void MainWindow::initDockWidgets()
     // WorkSheetWidget *workSheetWidget = new WorkSheetWidget("WorkSheet", this);
     splitDockWidget(cytometerSettingsWidget, WorkSheetWidget::instance(), Qt::Horizontal);
     tabifyDockWidget(WorkSheetWidget::instance(), WaveformWidget::instance());
-
+    WorkSheetWidget::instance()->raise();
 
     DataAcquisitionWidget *acquisitionWidget = new DataAcquisitionWidget("Acquisition Control", this);
     splitDockWidget(cytometerSettingsWidget, acquisitionWidget, Qt::Vertical);
 
-    SortingWidget *sortingWidget = new SortingWidget("Sorting Control", this);
-    splitDockWidget(acquisitionWidget, sortingWidget, Qt::Vertical);
+    tabifyDockWidget(acquisitionWidget, SortingWidget::instance());
+    acquisitionWidget->raise();
 
     connect(experimentsBrowser, &ExperimentsBrowser::worksheetSelected, WorkSheetWidget::instance(), &WorkSheetWidget::addWorkSheetView);
     connect(experimentsBrowser, &ExperimentsBrowser::settingsSelected, cytometerSettingsWidget, &CytometerSettingsWidget::onCytometerSettingsChanged);
 
 
-    // QList<QDockWidget *> docks = {experimentsBrowser, cytometerSettingsWidget};
-    // QList<int> sizes = {3, 7};
-    // resizeDocks(docks, sizes, Qt::Horizontal);
+    QList<QDockWidget*> horizontalDocks = {
+        experimentsBrowser,
+        cytometerSettingsWidget,
+        WorkSheetWidget::instance()
+    };
+    QList<int> sizes = {1, 3, 3};  // 比例值（实际像素会根据窗口大小计算）
+    resizeDocks(horizontalDocks, sizes, Qt::Horizontal);
 }
 
 

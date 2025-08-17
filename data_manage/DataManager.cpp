@@ -1,6 +1,9 @@
 #include "DataManager.h"
 #include "HistogramPlot.h"
 #include "ScatterPlot.h"
+#include "QFile.h"
+#include <QDateTime>
+#include <QDir>
 
 DataManager::DataManager(QObject *parent)
     : QObject{parent}
@@ -28,6 +31,32 @@ void DataManager::initDataManager(const QVector<DetectorSettings> &settings)
         m_measurementTypesPerChannel.append(types);
     }
     m_sampleData.init(getEmptySampleRecord());
+
+    m_dataSavePath = QString("./SeekCytometerData/pulse_data_%1").arg(QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss"));
+    QDir saveDir(m_dataSavePath);
+    if (!saveDir.exists()) {
+        if (saveDir.mkpath(".")) {
+            qDebug() << "Created directory " << m_dataSavePath << " ok";
+        } else {
+            qDebug() << "Created directory " << m_dataSavePath << " failed!";
+            m_dataSavePath = ".";
+        }
+    }
+    m_dataSavePath = saveDir.absoluteFilePath("pulsedata.csv");
+    QFile dataFile(m_dataSavePath);
+    if (dataFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODeviceBase::Append)) {
+        QTextStream textStream(&dataFile);
+        for (int ch : m_enabledChannels) {
+            int index = m_enabledChannels.indexOf(ch);
+            for (MeasurementType type : m_measurementTypesPerChannel.at(index)) {
+                textStream << QString("Channel-%1(%2)").arg(ch).arg(MeasurementTypeHelper::measurementTypeToString(type));
+                textStream << ",";
+            }
+        }
+        textStream << "\n";
+        dataFile.close();
+    }
+
 }
 
 SampleData DataManager::getEmptySampleRecord()
@@ -61,6 +90,7 @@ void DataManager::addSample(const SampleData &data)
 void DataManager::addSamples(const QVector<SampleData> &data)
 {
     m_sampleData.writeMultiple(data);
+    saveDataToCsvFile(data);
 }
 
 const QVector<SampleData> &DataManager::getSampleData()
@@ -140,4 +170,27 @@ void DataManager::processScatterData(PlotBase *plot, const QVector<SampleData> &
 void DataManager::processContourData(PlotBase *plot, const QVector<SampleData> &data)
 {
     // To be implemented
+}
+
+void DataManager::saveDataToCsvFile(const QVector<SampleData> &updateData)
+{
+    QFile dataFile(m_dataSavePath);
+    if (dataFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODeviceBase::Append)) {
+        QTextStream dataStream(&dataFile);
+        for (int i = 0; i < updateData.size(); i++) {
+            SampleData data = updateData.at(i);
+            for (int ch : m_enabledChannels) {
+                int index = m_enabledChannels.indexOf(ch);
+                for (MeasurementType type : m_measurementTypesPerChannel.at(index)) {
+                    dataStream << data.at(index).at(static_cast<int>(type));
+                    dataStream << ",";
+                }
+            }
+
+            dataStream << "\n";
+        }
+        dataFile.close();
+    } else {
+        qDebug() << "Save Failed! Error: data file open failed!";
+    }
 }

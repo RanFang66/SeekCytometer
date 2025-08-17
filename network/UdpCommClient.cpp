@@ -24,7 +24,14 @@ UdpCommClient::UdpCommClient(QObject *parent)
 
 void UdpCommClient::startUdpClient()
 {
+#if ENABLE_DEBUG
+    QTimer::singleShot(2000, this, [this]() {
+        m_connected = true;
+        emit udpCommEstablished();
+    });
+#else
     m_handshakeTimer->start();
+#endif
 }
 
 
@@ -112,6 +119,44 @@ bool UdpCommClient::sendDetectorSettings(const QModelIndex &topLeft, const QMode
         return false;
     } else {
         qDebug() << "[UdpCommClient] Sent detector settings to remote.";
+        return true;
+    }
+}
+
+bool UdpCommClient::sendGateData(const Gate &gate, int detectorX, int detectorY)
+{
+    QByteArray data;
+    QDataStream stream(&data, QIODevice::WriteOnly);
+    stream << (char)gate.gateType();
+    stream << (char)(detectorX & 0x00ff);
+    stream << (char)(detectorY & 0x00ff);
+    stream << (char)gate.xMeasurementType();
+    stream << (char)gate.yMeasurementType();
+    for (const QPointF &point : gate.points()) {
+        QPoint p = point.toPoint();
+        stream << p.x();
+        stream << p.y();
+    }
+    if (!sendFrame(CommCmdType::CMD_GATE_SETTINGS, data)) {
+        return false;
+    } else {
+        qDebug() << "[UdpCommClient] Sent gate settings to remote.";
+        return true;
+    }
+}
+
+bool UdpCommClient::sendDriveParameters(int type, int delay, int width, int coolingTime)
+{
+    QByteArray data;
+    QDataStream stream(&data, QIODevice::WriteOnly);
+    stream << (char)type;
+    stream << delay;
+    stream << width;
+    stream << coolingTime;
+    if (!sendFrame(CommCmdType::CMD_DRIVE_SETTINGS, data)) {
+        return false;
+    } else {
+        qDebug() << "[UdpCommClient] Sent drive parameters to remote.";
         return true;
     }
 }
@@ -223,12 +268,12 @@ void UdpCommClient::parseSampleData(const QByteArray &data)
 
     quint32 header;
     quint32 eventId;
-    quint32 channelMask;
+    quint32 eventFlag;
     quint32 magicWord;
     while (!stream.atEnd()) {
         stream >> header;
         eventId  = header & 0x00FFFFFF;
-        channelMask = (header >> 24) & 0x00FF;
+        eventFlag = (header >> 24) & 0x00FF;
 
         SampleData oneSample = DataManager::instance().getEmptySampleRecord();
         for (int j = 0; j < oneSample.size(); ++j) {

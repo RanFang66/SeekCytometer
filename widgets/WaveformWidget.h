@@ -19,7 +19,7 @@ public:
         static WaveformWidget instance("Realtime Waveform");
         return &instance;
     }
-
+    ~WaveformWidget();
 signals:
     // void enableWaveform(bool en);
     // void waveformChannelsChanged(int);

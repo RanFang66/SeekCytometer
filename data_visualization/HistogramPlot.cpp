@@ -5,7 +5,7 @@
 HistogramPlot::HistogramPlot(const Plot &plot, QGraphicsItem *parent)
     : PlotBase(plot, parent), m_data(ChartBuffer<qreal>(DEFAULT_DATA_LENGTH))
 {
-    m_xAxis->setRange(0, 131072);
+    m_xAxis->setRange(5000, 80000);
     m_yAxis->setRange(0, 100);
 
     m_xAxis->setTicks(5);
@@ -23,6 +23,9 @@ void HistogramPlot::updateData(const QVector<double> &data)
     int binNums = m_plotArea.width();
     m_bins.fill(0, binNums);
     m_maxValue = 0;
+
+    m_xMinVal = m_xAxis->minValue();
+    m_xMaxVal = m_xAxis->maxValue();
     for (const double val : m_data.readAll()) {
         int binIndex = (val - m_xAxis->minValue()) * binNums / m_xAxis->range();
         if (binIndex < 0) binIndex = 0;
@@ -31,12 +34,19 @@ void HistogramPlot::updateData(const QVector<double> &data)
         if (m_bins[binIndex] > m_maxValue) {
             m_maxValue = m_bins[binIndex];
         }
+        if (val < m_xMinVal) m_xMinVal = val;
+        if (val > m_xMaxVal) m_xMaxVal = val;
     }
 
 
     if (m_maxValue > m_yAxis->maxValue() * 0.9) {
         m_yAxis->setRange(0, m_maxValue * 1.1);
     }
+
+    if (m_xMinVal != m_xAxis->minValue() || m_xMaxVal != m_xAxis->maxValue()) {
+        m_xAxis->setRange(m_xMinVal * 0.9, m_xMaxVal * 1.1);
+    }
+
     update();
 }
 

@@ -41,10 +41,12 @@ private:
     QVector<int>                        m_enabledChannels;
     QVector<QVector<MeasurementType>>   m_measurementTypesPerChannel;
 
+    QString         m_dataSavePath;
+
     void processHistogramData(PlotBase *plot, const QVector<SampleData> &data);
     void processScatterData(PlotBase *plot, const QVector<SampleData> &data);
     void processContourData(PlotBase *plot, const QVector<SampleData> &data);
-
+    void saveDataToCsvFile(const QVector<SampleData> &updateData);
     explicit DataManager(QObject *parent = nullptr);
 
 

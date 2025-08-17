@@ -14,9 +14,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools Sql)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools Sql Network Charts StateMachine)
 
-# option(ENABLE_DEBUG_MODE "Enable debug mode" ON)
-# if(ENABLE_DEBUG_MODE)
-#     add_definitions(-DDEBUG_MODE)
+
+
+
+
+# Only enable debug in DEBUG BUILD
+# if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+#     target_compile_definitions(my_app
+#         PRIVATE
+#             ENABLE_DEBUG=1
+#     )
 # endif()
 
 
@@ -134,6 +141,10 @@ else()
 endif()
 
 target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Sql Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Charts Qt${QT_VERSION_MAJOR}::StateMachine)
+
+# FOR DEBUG
+target_compile_definitions(SeekCytometer PRIVATE ENABLE_DEBUG=0)
+
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
