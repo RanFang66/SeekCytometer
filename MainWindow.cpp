@@ -91,7 +91,7 @@ void MainWindow::initDockWidgets()
         "}"
         );
 
-    ExperimentsBrowser *experimentsBrowser = new ExperimentsBrowser("Experiments Browser", this);
+    ExperimentsBrowser *experimentsBrowser = ExperimentsBrowser::instance();
     addDockWidget(Qt::LeftDockWidgetArea, experimentsBrowser);
 
 

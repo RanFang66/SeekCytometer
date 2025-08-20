@@ -3,7 +3,7 @@
 #include "ScatterPlot.h"
 #include <QRandomGenerator>
 WorkSheetView::WorkSheetView(const WorkSheet &workSheet, QWidget *parent)
-: QGraphicsView{parent}, m_workSheet{workSheet}
+    : QGraphicsView{parent}, m_workSheet{workSheet}
 {
     initWorkSheetView();
 }

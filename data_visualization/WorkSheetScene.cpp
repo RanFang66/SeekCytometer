@@ -4,6 +4,7 @@
 #include "HistogramPlot.h"
 #include "ScatterPlot.h"
 #include "PlotsDAO.h"
+#include "GatesDAO.h"
 #include <QMessageBox>
 #include "WorkSheetWidget.h"
 
@@ -50,7 +51,7 @@ PlotBase *WorkSheetScene::addNewPlot(PlotType plotType, const Plot &plot)
             plotBase = (histogramPlot);
             addItem(histogramPlot);
             m_plots.append(static_cast<PlotBase*>(histogramPlot));
-            connect(histogramPlot, &PlotBase::deleteRequested, this, &WorkSheetScene::onDeletePlot);
+            // connect(histogramPlot, &PlotBase::deleteRequested, this, &WorkSheetScene::onDeletePlot);
         }
         break;
     case PlotType::SCATTER_PLOT:
@@ -59,7 +60,7 @@ PlotBase *WorkSheetScene::addNewPlot(PlotType plotType, const Plot &plot)
             plotBase = scatterPlot;
             addItem(scatterPlot);
             m_plots.append(static_cast<PlotBase*>(scatterPlot));
-            connect(scatterPlot, &PlotBase::deleteRequested, this, &WorkSheetScene::onDeletePlot);
+            // connect(scatterPlot, &PlotBase::deleteRequested, this, &WorkSheetScene::onDeletePlot);
         }
         break;
     case PlotType::CONTOUR_PLOT:
@@ -76,9 +77,10 @@ void WorkSheetScene::addNewGate(GateType gateType, const Gate &gate, PlotBase *p
 {
     GateItem *gateItem = GateItemFactory::createGateItem(gateType, gate, parent);
     qDebug() << "Add New Gate, type: " << Gate::gateTypeToString(gateType)
-             << "P1: " << gate.points().at(0) << "P2: " << gate.points().at(1);
+             << gate.pointsJsonString();
 
     m_gateItems.append(gateItem);
+    // connect(gateItem, &GateItem::gateDeleteRequested, this, &WorkSheetScene::onDeleteGate);
     update();
 }
 
@@ -158,6 +160,18 @@ void WorkSheetScene::onDeletePlot(PlotBase *plot)
         m_plots.removeOne(plot);
         PlotsDAO().deletePlot(plot->plotId());
         plot->deleteLater();
+    }
+}
+
+void WorkSheetScene::onDeleteGate(GateItem *gate)
+{
+    QMessageBox::StandardButton ret = QMessageBox::question(WorkSheetWidget::instance(), tr("Delete Gate"), tr("Confirm to delelte this Gate?"));
+    if (ret == QMessageBox::Yes) {
+        removeItem(gate);
+        m_gateItems.removeOne(gate);
+        GatesModel::instance()->removeGate(gate->gate());
+        // GatesDAO().deleteGate(gate->getGateId());
+        gate->deleteLater();
     }
 }
 

@@ -12,16 +12,22 @@ class ExperimentsBrowser : public QDockWidget
 {
     Q_OBJECT
 public:
-    explicit ExperimentsBrowser(const QString &title, QWidget *parent = nullptr);
+    static ExperimentsBrowser *instance()
+    {
+        static ExperimentsBrowser instance("Experiments Browser");
+        return &instance;
+    }
+
+
     ~ExperimentsBrowser();
 
-    struct CurrentIndexPath {
-        QModelIndex currentUser;
-        QModelIndex currentExperiment;
-        QModelIndex currentSpecimen;
-        QModelIndex currentTube;
-        QModelIndex currentSettings;
-    };
+    // struct CurrentIndexPath {
+    //     QModelIndex currentUser;
+    //     QModelIndex currentExperiment;
+    //     QModelIndex currentSpecimen;
+    //     QModelIndex currentTube;
+    //     QModelIndex currentSettings;
+    // };
 
 signals:
     void experimentSelected(int experimentId);
@@ -29,6 +35,10 @@ signals:
     void settingsSelected(int settingsId);
 
 private:
+    explicit ExperimentsBrowser(const QString &title, QWidget *parent = nullptr);
+    ExperimentsBrowser &operator=(const ExperimentsBrowser &) = delete;
+    ExperimentsBrowser(const ExperimentsBrowser &) = delete;
+
     BrowserDataModel *m_model;
     QItemSelectionModel *m_theSelection;
     QAction *addExperiment;
@@ -47,7 +57,7 @@ private:
 
     QModelIndex m_LoginUserIndex;
     QList<QModelIndex> currentIndexPath;
-    CurrentIndexPath currentIndexList;
+    // CurrentIndexPath currentIndexList;
     QString currentPathStr;
 
 

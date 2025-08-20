@@ -112,7 +112,7 @@ void DetectorSettingsModel::resetDetectorSettingModel(int settingId)
 {
     QMutexLocker locker(&m_mutex);
     beginResetModel();
-    m_settingsList = DetectorSettingsDAO().fetchDetectorSettings(settingId);
+    m_settingsList = DetectorSettingsDAO().fetchDetectorSettingsList(settingId);
     endResetModel();
 
     emit dataChanged(index(0, 0), index(rowCount()-1, columnCount()-1));

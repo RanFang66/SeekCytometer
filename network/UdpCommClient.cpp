@@ -1,6 +1,7 @@
 #include "UdpCommClient.h"
 #include "DataManager.h"
 #include "DetectorSettingsModel.h"
+#include "EventDataManager.h"
 
 UdpCommClient::UdpCommClient(QObject *parent)
     : QObject{parent}, m_udpSocket{new QUdpSocket(this)}, m_remotePort(0),
@@ -123,19 +124,20 @@ bool UdpCommClient::sendDetectorSettings(const QModelIndex &topLeft, const QMode
     }
 }
 
-bool UdpCommClient::sendGateData(const Gate &gate, int detectorX, int detectorY)
+bool UdpCommClient::sendGateData(const Gate &gate)
 {
     QByteArray data;
     QDataStream stream(&data, QIODevice::WriteOnly);
+    int detectorX = gate.xAxisDetectorId();
+    int detectorY = gate.yAxisDetectorId();
     stream << (char)gate.gateType();
     stream << (char)(detectorX & 0x00ff);
     stream << (char)(detectorY & 0x00ff);
     stream << (char)gate.xMeasurementType();
     stream << (char)gate.yMeasurementType();
-    for (const QPointF &point : gate.points()) {
-        QPoint p = point.toPoint();
-        stream << p.x();
-        stream << p.y();
+    for (const QPoint &point : gate.points()) {
+        stream << point.x();
+        stream << point.y();
     }
     if (!sendFrame(CommCmdType::CMD_GATE_SETTINGS, data)) {
         return false;
@@ -237,7 +239,8 @@ void UdpCommClient::onReadyRead()
                     parseHandshakeFrame(dataField);
                     break;
                 case CommCmdType::CMD_PULSE_DATA:
-                    parseSampleData(dataField);
+                    // parseSampleData(dataField);
+                    parseEventData(dataField);
                     break;
                 case CommCmdType::CMD_WAVEFORM_DATA:
                     parseWaveformFrame(dataField);
@@ -255,6 +258,40 @@ void UdpCommClient::parseHandshakeFrame(const QByteArray &data)
     quint8 state;
     stream >> state;
     qDebug() << "[UdpCommClient] Handshake frame received " << "Current Cytometer state:" << state;
+}
+
+
+void UdpCommClient::parseEventData(const QByteArray &data)
+{
+    int channelSize = EventDataManager::instance().enabledChannels().size();
+    int eventSize = channelSize * 3 + 1 + 1;
+    int eventByteSize = eventSize * 4;
+    int eventNum = data.size() / eventByteSize;
+
+    QVector<EventData> eventDataBuffer;
+    int enableSortNum = 0;
+    int sortedNum = 0;
+
+
+    for (int i = 0; i < eventNum; i++) {
+        EventData eventData(EventDataManager::instance().enabledChannels(), data.mid(i * eventByteSize, eventByteSize));
+        if (eventData.isEnabledSort()) {
+            enableSortNum++;
+        }
+        if (eventData.isRealSorted()) {
+            sortedNum++;
+        }
+        eventDataBuffer.append(eventData);
+    }
+    qDebug() << "Received " << eventNum << " Events Data";
+    // QDataStream stream(data);
+
+    // while (!stream.atEnd()) {
+    //     EventData eventData(EventDataManager::instance().enabledChannels(), stream);
+    //     eventDataBuffer.append(eventData);
+    // }
+
+    emit eventDataReady(eventDataBuffer, enableSortNum, sortedNum);
 }
 
 void UdpCommClient::parseSampleData(const QByteArray &data)

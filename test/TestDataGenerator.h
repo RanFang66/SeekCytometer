@@ -7,7 +7,7 @@
 #include <QMutex>
 
 #include "DataManager.h"
-
+#include "EventData.h"
 // class DetectorData
 // {
 // public:
@@ -63,9 +63,11 @@ public:
 
 signals:
     void testDataGenerated(const QVector<SampleData> &generatedData);
+    void eventDataGenerated(const QVector<EventData> &eventData, int enableSortNum, int sortedNum);
 
 private slots:
     void generateTestData();
+    void generateEventData();
 
 private:
     QTimer                  *m_generateTimer;
@@ -73,6 +75,7 @@ private:
     int                     m_interval;
     int                     m_dataMin;
     int                     m_dataMax;
+    int                     m_eventId;
 
     QMutex                  m_mutex;
 

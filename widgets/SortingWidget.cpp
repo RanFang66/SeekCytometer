@@ -4,12 +4,12 @@
 #include <QHBoxLayout>
 #include <QGridLayout>
 
-#include <GatesDAO.h>
-#include <DetectorSettingsDAO.h>
+#include "GatesModel.h"
 #include "CytometerController.h"
+#include "EventDataManager.h"
 
 SortingWidget::SortingWidget(const QString &tilte, QWidget *parent)
-    : QDockWidget{tilte, parent}
+    : QDockWidget{tilte, parent}, updateTimer(new QTimer(this))
 {
     initSortingWidget();
 }
@@ -71,23 +71,45 @@ void SortingWidget::initSortingWidget()
 
 
     QGridLayout *statusLayout = new QGridLayout(groupStatus);
-    sortNum = new QLabel("0", this);
-    abortNum = new QLabel("0", this);
-    sortRate = new QLabel("0", this);
-    abortRate = new QLabel("0", this);
-    sortEfficiency = new QLabel("0", this);
-    progressSort = new QProgressBar(this);
-    statusLayout->addWidget(new QLabel(tr("Sort Number"), this), 0, 0);
-    statusLayout->addWidget(sortNum, 0, 1);
-    statusLayout->addWidget(new QLabel(tr("Abort Number"), this), 0, 2);
-    statusLayout->addWidget(abortNum, 0, 3);
-    statusLayout->addWidget(new QLabel(tr("Sort Rate"), this), 1, 0);
-    statusLayout->addWidget(sortRate, 1, 1);
-    statusLayout->addWidget(new QLabel(tr("Abort Rate"), this), 1, 2);
-    statusLayout->addWidget(abortRate, 1, 3);
-    statusLayout->addWidget(new QLabel(tr("Sort Efficiency"), this), 2, 0);
-    statusLayout->addWidget(sortEfficiency, 2, 1);
-    statusLayout->addWidget(progressSort, 2, 2, 1, 2);
+    lblSortNum = new QLabel("0", this);
+    lblDiscardNum = new QLabel("0", this);
+    lblSortRate = new QLabel("0 / s", this);
+    lblProcessRate = new QLabel("0 / s", this);
+    lblEventsNum = new QLabel("0", this);
+    lblSortRatio = new QLabel("0.00%", this);
+    lblDiscardRatio = new QLabel("0.00%", this);
+    lblSortTime = new QLabel("0 s", this);
+    // progressSort = new QProgressBar(this);
+
+
+
+    statusLayout->addWidget(new QLabel(tr("Sort Time"), this), 0, 0);
+    statusLayout->addWidget(lblSortTime, 0, 1);
+    statusLayout->addWidget(new QLabel(tr("Event Number"), this), 0, 2);
+    statusLayout->addWidget(lblEventsNum, 0, 3);
+
+
+
+    statusLayout->addWidget(new QLabel(tr("Sort Number"), this), 1, 0);
+    statusLayout->addWidget(lblSortNum, 1, 1);
+    statusLayout->addWidget(new QLabel(tr("Discard Number"), this), 1, 2);
+    statusLayout->addWidget(lblDiscardNum, 1, 3);
+
+    statusLayout->addWidget(new QLabel(tr("Events Rate"), this), 2, 0);
+    statusLayout->addWidget(lblProcessRate, 2, 1);
+    statusLayout->addWidget(new QLabel(tr("Sort Rate"), this), 2, 2);
+    statusLayout->addWidget(lblSortRate, 2, 3);
+
+
+    statusLayout->addWidget(new QLabel(tr("Sort Ratio"), this), 3, 0);
+    statusLayout->addWidget(lblSortRatio, 3, 1);
+    statusLayout->addWidget(new QLabel(tr("Discard Ratio"), this), 3, 2);
+    statusLayout->addWidget(lblDiscardRatio, 3, 3);
+
+
+    // statusLayout->addWidget(new QLabel(tr("Sort Efficiency"), this), 3, 0);
+    // statusLayout->addWidget(lblSortEfficiency, 3, 1);
+    // statusLayout->addWidget(progressSort, 2, 2, 1, 2);
     groupStatus->setLayout(statusLayout);
 
 
@@ -102,6 +124,10 @@ void SortingWidget::initSortingWidget()
     setWidget(mainWidget);
 
 
+    updateTimer->setInterval(1000);
+    updateTimer->stop();
+    connect(updateTimer, &QTimer::timeout, this, &SortingWidget::updateDisplay);
+
     connect(btnRunSorting, &QPushButton::clicked, this, &SortingWidget::startSorting);
     connect(comboDriveMode, &QComboBox::currentIndexChanged, this, &SortingWidget::changeDriveParameters);
     connect(editCoolingTime, &QLineEdit::editingFinished, this, &SortingWidget::changeDriveParameters);
@@ -109,26 +135,46 @@ void SortingWidget::initSortingWidget()
     connect(editDriveDealy, &QLineEdit::editingFinished, this, &SortingWidget::changeDriveParameters);
 
     connect(comboPopulation, &QComboBox::currentIndexChanged, this, &SortingWidget::changeGate);
+
+    connect(GatesModel::instance(), &GatesModel::dataChanged, this, &SortingWidget::updatePopulation);
 }
 
-void SortingWidget::updatePopulation(int workSheetId)
+void SortingWidget::resetSortingStatus()
+{
+    m_sortTime = 0;
+    lblSortTime->setText("0 s");
+    lblEventsNum->setText("0");
+    lblSortNum->setText("0");
+    lblDiscardNum->setText("0");
+    lblProcessRate->setText("0 / s");
+    lblSortRate->setText("0 /s");
+    lblSortRatio->setText("0.00%");
+    lblDiscardRatio->setText("0.00%");
+}
+
+SortingWidget::~SortingWidget()
+{
+    deleteLater();
+}
+
+void SortingWidget::updatePopulation()
 {
     comboPopulation->clear();
-    QList<Gate> gateList = GatesDAO().fetchGates(workSheetId);
-    for (const Gate &gate : gateList) {
-        comboPopulation->addItem(gate.name(), gate.id());
+    QList<Gate> gateList = GatesModel::instance()->getGateList();
+    for (int row = 0; row < gateList.size(); row++) {
+        comboPopulation->addItem(gateList[row].name(), row);
     }
-    comboPopulation->addItem("All", 0);
+    comboPopulation->addItem("All", -1);
 }
 
 const Gate SortingWidget::getCurrentPopulation() const
 {
-    int id = comboPopulation->currentData().toInt();
+    int row = comboPopulation->currentData().toInt();
 
-    if (id == 0) {
+    if (row == -1) {
         return Gate();
     }
-    return GatesDAO().fetchGate(id);
+    return GatesModel::instance()->getGate(row);
 }
 
 void SortingWidget::changeDriveParameters()
@@ -144,16 +190,13 @@ void SortingWidget::changeDriveParameters()
 void SortingWidget::changeGate()
 {
     int id = comboPopulation->currentData().toInt();
-    int detectorX = 0;
-    int detectorY = 0;
-    if (id == 0) {
+
+    if (id == -1) {
         m_currGate = Gate();
     } else {
-        m_currGate = GatesDAO().fetchGate(id);
-        detectorX = DetectorSettingsDAO().getSettingDetectorId(m_currGate.xAxisSettingId());
-        detectorY = DetectorSettingsDAO().getSettingDetectorId(m_currGate.yAxisSettingId());
+        m_currGate = GatesModel::instance()->getGate(id);
     }
-    emit gateChanged(m_currGate, detectorX, detectorY);
+    emit gateChanged(m_currGate);
 }
 
 void SortingWidget::startSorting()
@@ -161,10 +204,38 @@ void SortingWidget::startSorting()
     if (btnRunSorting->text() == tr("Start Sort")) {
         btnRunSorting->setText(tr("Stop Sort"));
         CytometerController::instance()->startSorting();
+        resetSortingStatus();
+        updateTimer->start();
     } else {
         btnRunSorting->setText(tr("Start Sort"));
         CytometerController::instance()->stopSorting();
+        updateTimer->stop();
     }
+}
+
+void SortingWidget::updateDisplay()
+{
+    m_sortTime++;
+    EventDataManager &dataManager = EventDataManager::instance();
+    int eventsNum = dataManager.processedEventNum();
+    int sortNum = dataManager.sortedEventNum();
+    // int enableSortNum = dataManager.enableSortedEventNum();
+    int discardNum = dataManager.discardedEventNum();
+    double eventsRate = static_cast<double>(eventsNum) / m_sortTime;
+    double sortRate = static_cast<double>(sortNum) / m_sortTime;
+
+    double sortRatio = (eventsNum > 0) ? (static_cast<double>(sortNum) / eventsNum * 100.0) : 0;
+    double discardRatio = (eventsNum > 0) ? (static_cast<double>(discardNum) / eventsNum * 100.0) : 0;
+
+
+    lblSortTime->setText(QString("%1 s").arg(m_sortTime));
+    lblEventsNum->setText(QString::number(eventsNum));
+    lblSortNum->setText(QString::number(sortNum));
+    lblDiscardNum->setText(QString::number(discardNum));
+    lblProcessRate->setText(QString::asprintf("%.1f / s", eventsRate));
+    lblSortRate->setText(QString::asprintf("%.1f / s", sortRate));
+    lblSortRatio->setText(QString::asprintf("%.2f %%", sortRatio));
+    lblDiscardRatio->setText(QString::asprintf("%.2f %%", discardRatio));
 }
 
 

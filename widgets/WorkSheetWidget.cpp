@@ -5,12 +5,21 @@
 #include "WorkSheetsDAO.h"
 #include "AddNewPlotDialog.h"
 #include "PlotsDAO.h"
-#include "DataManager.h"
-#include "GatesDAO.h"
+// #include "DataManager.h"
+// #include "GatesDAO.h"
 #include <QInputDialog>
 #include "SortingWidget.h"
+#include "EventDataManager.h"
+#include "GatesModel.h"
+
+
 WorkSheetWidget::WorkSheetWidget(const QString &title, QWidget *parent)
-    : QDockWidget{title, parent}, m_updateTimer(new QTimer(this)), m_active(false), m_updateInterval(1000)
+    : QDockWidget{title, parent},
+    m_updateTimer(new QTimer(this)),
+    m_active(false),
+    m_updateInterval(1000),
+    tableView(new QTableView(this)),
+    m_model(GatesModel::instance())
 {
     initDockWidget();
 }
@@ -44,7 +53,7 @@ void WorkSheetWidget::addWorkSheetView(int worksheetId)
 
 
 
-    SortingWidget::instance()->updatePopulation(worksheetId);
+    // SortingWidget::instance()->updatePopulation(worksheetId);
     m_activedWorksheetId.append(worksheetId);
     WorkSheet workSheet = WorkSheetsDAO().fetchWorkSheet(worksheetId);
     WorkSheetView *workSheetView = new WorkSheetView(workSheet);
@@ -52,20 +61,20 @@ void WorkSheetWidget::addWorkSheetView(int worksheetId)
     currentWorkSheetView = workSheetView;
     currentWorkSheetScene = workSheetView->scene();
     connect(currentWorkSheetScene, &WorkSheetScene::finishedDrawingGate, this, &WorkSheetWidget::onFinishedDrawingGate);
-
+    m_model->resetGateModel(worksheetId);
 
     // for (const Gate& gate : GatesDAO().fetchGates(worksheetId)) {
     //     GatesDAO().deleteGate(gate.id());
     // }
 
     QList<Plot> plotList = PlotsDAO().fetchPlots(worksheetId);
-    QList<Gate> gateList = GatesDAO().fetchGates(worksheetId);
+    // QList<Gate> gateList = GatesDAO().fetchGates(worksheetId);
 
 
     for (const Plot &plot : plotList) {
         PlotBase *plotBase = workSheetView->scene()->addNewPlot(plot.plotType(), plot);
         if (plotBase) {
-            for (const Gate &gate : gateList) {
+            for (const Gate &gate : m_model->getGateList()) {
                 if (gate.xAxisSettingId() == plot.axisXId() && gate.yAxisSettingId() == plot.axisYId()
                     && gate.xMeasurementType() == plot.xMeasurementType() && gate.yMeasurementType() == plot.yMeasurementType()) {
                     workSheetView->scene()->addNewGate(gate.gateType(), gate, plotBase);
@@ -85,7 +94,13 @@ void WorkSheetWidget::onFinishedDrawingGate(GateItem *gateItem)
     QString gateName = QInputDialog::getText(this, tr("Add New Gate"), tr("Please input gate name and confirm to add this new gate"), QLineEdit::Normal, gateItem->gate().name(), &ok);
     if (ok && !gateName.isEmpty()) {
         gateItem->setGateName(gateName);
-        int gateId = GatesDAO().insertGate(gateItem->gate());
+        // int gateId = GatesDAO().insertGate(gateItem->gate());
+        // if (gateId > 0) {
+        //     gateItem->setGateId(gateId);
+        //     addGateOk = true;
+        // }
+
+        int gateId = m_model->addGate(gateItem->gate());
         if (gateId > 0) {
             gateItem->setGateId(gateId);
             addGateOk = true;
@@ -98,6 +113,9 @@ void WorkSheetWidget::onFinishedDrawingGate(GateItem *gateItem)
 void WorkSheetWidget::initDockWidget()
 {
     QWidget *mainWidget = new QWidget(this);
+
+    tableView->setModel(m_model);
+    // tableView->setEditTriggers(QAbstractItemView::DoubleClicked);
 
     QToolBar *toolBar = new QToolBar("ToolBar", mainWidget);
     toolBar->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
@@ -158,6 +176,7 @@ void WorkSheetWidget::initDockWidget()
     QVBoxLayout *layout = new QVBoxLayout(mainWidget);
     layout->addWidget(toolBar);
     layout->addWidget(tabWidget);
+    layout->addWidget(tableView);
 
     mainWidget->setLayout(layout);
     setWidget(mainWidget);
@@ -185,6 +204,7 @@ void WorkSheetWidget::onCurrentTabChanged(int index)
     currentWorkSheetView = qobject_cast<WorkSheetView*>(tabWidget->widget(index));
     if (currentWorkSheetView) {
         currentWorkSheetScene = currentWorkSheetView->scene();
+        m_model->resetGateModel(currentWorkSheetView->worksheetId());
     }
 }
 
@@ -209,7 +229,8 @@ void WorkSheetWidget::addNewGate(QAction *action)
 
 void WorkSheetWidget::onUpdateTimerTimeout()
 {
-    DataManager::instance().processData(currentWorkSheetScene->plots());
+    // DataManager::instance().processData(currentWorkSheetScene->plots());
+    EventDataManager::instance().processData(currentWorkSheetScene->plots());
 }
 
 

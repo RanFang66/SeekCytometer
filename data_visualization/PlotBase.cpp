@@ -5,6 +5,9 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QMenu>
 #include <QAction>
+#include "GateItem.h"
+#include "WorkSheetScene.h"
+
 
 PlotBase::PlotBase(const Plot &plot, QGraphicsItem *parent)
 : QGraphicsObject{parent}, m_plot{plot}
@@ -48,13 +51,11 @@ void PlotBase::setTitle(const QString &title)
 void PlotBase::setAxisXName(const QString &name)
 {
     m_xAxis->setAxisName(name);
-    m_plot.setAxisXName(name);
 }
 
 void PlotBase::setAxisYName(const QString &name)
 {
     m_yAxis->setAxisName(name);
-    m_plot.setAxisYName(name);
 }
 
 
@@ -149,12 +150,28 @@ void PlotBase::paintAxis(QPainter *painter)
 void PlotBase::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
     QMenu menu;
-    QAction *deleteAction = menu.addAction("Delete Plot");
-    QAction *selectedAction = menu.exec(event->screenPos());
+    WorkSheetScene *workSheetScene = dynamic_cast<WorkSheetScene*>((scene()));
+    if (!workSheetScene)
+        return;
 
-    if (selectedAction == deleteAction) {
-        emit deleteRequested(this);
+    QAction *deleteAction = menu.addAction(QString("Delete Plot %1").arg(title()));
+    QObject::connect(deleteAction, &QAction::triggered, workSheetScene, [this, sc=workSheetScene]() {
+            QMetaObject::invokeMethod(sc, "onDeletePlot", Qt::QueuedConnection,
+                                      Q_ARG(PlotBase*, this));
+    });
+
+    for (QGraphicsItem *gate : childItems()) {
+        GateItem *item = dynamic_cast<GateItem*>(gate);
+        if (!item)
+            continue;
+        QAction *gateDeleteAction = menu.addAction(QString("Delete Gate %1").arg(item->getGateName()));
+        QObject::connect(gateDeleteAction, &QAction::triggered, workSheetScene, [item, sc=workSheetScene]() {
+            QMetaObject::invokeMethod(sc, "onDeleteGate", Qt::QueuedConnection,
+                                      Q_ARG(GateItem*, item));
+        });
     }
+
+    QAction *selectedAction = menu.exec(event->screenPos());
 
     event->accept();
 }

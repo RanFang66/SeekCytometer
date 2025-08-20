@@ -37,8 +37,9 @@ protected:
 signals:
     void finishedDrawingGate(GateItem *gateItem);
 
-private slots:
+public slots:
     void onDeletePlot(PlotBase *plot);
+    void onDeleteGate(GateItem *gate);
 
 private:
     DrawingState    m_drawState;

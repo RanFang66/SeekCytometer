@@ -7,6 +7,9 @@
 #include "WorkSheetView.h"
 #include <QTimer>
 
+#include "GatesModel.h"
+#include <QTableView>
+
 class WorkSheetWidget : public QDockWidget
 {
     Q_OBJECT
@@ -69,6 +72,11 @@ private:
     int         m_updateInterval;
 
     QList<int>  m_activedWorksheetId;
+
+
+    QTableView *tableView;
+    GatesModel *m_model;
+
 };
 
 #endif // WORKSHEETWIDGET_H

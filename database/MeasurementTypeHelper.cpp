@@ -1,5 +1,8 @@
 #include "MeasurementTypeHelper.h"
 
+QVector<MeasurementType> MeasurementTypeHelper::typeList = {MeasurementType::Height, MeasurementType::Width, MeasurementType::Area};
+
+
 const std::unordered_map<QString, MeasurementType> MeasurementTypeHelper::stringToEnumMap = {
     {"Height", MeasurementType::Height},
     {"Width", MeasurementType::Width},
@@ -46,3 +49,10 @@ QString MeasurementTypeHelper::parameterMeasurementType(const QString &parameter
             return parameter;
     }
 }
+
+int MeasurementTypeHelper::MeasurementTypeIndex(MeasurementType type)
+{
+    return static_cast<int>(type);
+}
+
+

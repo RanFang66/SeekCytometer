@@ -8,32 +8,7 @@
 
 #include "PlotBase.h"
 #include "DetectorSettings.h"
-
-
-
-
-class EventData {
-
-public:
-    EventData()
-    {
-        eventId = 0;
-        channelMask = 0;
-        for (int i = 0; i < 8; i++) {
-            peak[i] = 0;
-            width[i] = 0;
-            area[i] = 0;
-        }
-    }
-
-
-
-    quint32 eventId;
-    quint8  channelMask;
-    qint32  peak[8];
-    quint32 width[8];
-    qint32  area[8];
-};
+#include "EventData.h"
 
 
 
@@ -49,10 +24,16 @@ public:
     EventDataManager(const EventDataManager &) = delete;
 
     void initEventDataManager(const QVector<DetectorSettings> &settings);
+    const QVector<int> &enabledChannels() const;
+    int sortedEventNum() const;
+    int enableSortedEventNum() const;
+    int processedEventNum() const;
+    int discardedEventNum() const;
+
 
 public slots:
     void addEvent(const EventData &data);
-    void addEvents(const QVector<EventData> &data);
+    void addEvents(const QVector<EventData> &data, int enableSortNum, int sortedNum);
     const QVector<EventData> &getEventData();
 
     void processData(const QVector<PlotBase*> &plots);
@@ -67,11 +48,48 @@ private:
     void processScatterData(PlotBase *plot, const QVector<EventData> &data);
     void processContourData(PlotBase *plot, const QVector<EventData> &data);
 
+    void saveEventToCsvFile(const QVector<EventData> &updateData);
+
+
+    QString         m_dataSavePath;
 
     RingBuffer<EventData>               m_eventData;
+
+    int             m_processedEvent;
+    int             m_enableSortEvent;
+    int             m_sortedEvent;
+    int             m_discardEvent;
+
 
     QVector<int>                        m_enabledChannels;
 
 };
+
+inline const QVector<int> &EventDataManager::enabledChannels() const
+{
+    return m_enabledChannels;
+}
+
+inline int EventDataManager::sortedEventNum() const
+{
+    return m_sortedEvent;
+}
+
+inline int EventDataManager::enableSortedEventNum() const
+{
+    return m_enableSortEvent;
+}
+
+inline int EventDataManager::processedEventNum() const
+{
+    return m_processedEvent;
+}
+
+inline int EventDataManager::discardedEventNum() const
+{
+    return m_discardEvent;
+}
+
+
 
 #endif // EVENTDATAMANAGER_H

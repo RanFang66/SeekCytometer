@@ -58,12 +58,8 @@ Plot AddNewPlotDialog::getPlot() const
     plot.setWorkSheetId(m_worksheetId);
     plot.setAxisXId(xAxisId());
     plot.setAxisYId(yAxisId());
-    plot.setAxisXDetectorId(DetectorSettingsDAO().getSettingDetectorId(plot.axisXId()));
-    plot.setAxisYDetectorId(DetectorSettingsDAO().getSettingDetectorId(plot.axisYId()));
     plot.setPlotType(plotType());
     plot.setName(plotName());
-    plot.setAxisXName(xAxisName());
-    plot.setAxisYName(yAxisName());
     plot.setXMeasurementType(xMeasurementType());
     plot.setYMeasurementType(yMeasurementType());
     return plot;

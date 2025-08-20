@@ -10,6 +10,7 @@
 #include "WorkSheetScene.h"
 #include "PlotBase.h"
 
+
 class WorkSheetView : public QGraphicsView
 {
     Q_OBJECT

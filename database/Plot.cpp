@@ -1,15 +1,13 @@
 #include "Plot.h"
-
+#include "DetectorSettingsDAO.h"
 Plot::Plot()
 {
-    m_id = -1;
-    m_worksheetId = -1;
-    m_axisXSettingId = -1;
-    m_axisYSettingId = -1;
+    m_id = 0;
+    m_worksheetId = 0;
+    m_axisXSettingId = 0;
+    m_axisYSettingId = 0;
     m_plotType = PlotType::HISTOGRAM_PLOT;
     m_plotName = "";
-    m_axisXName = "";
-    m_axisYName = "";
     m_xMeasurementType = MeasurementType::Height;
     m_yMeasurementType = MeasurementType::Unknown;
 }
@@ -47,3 +45,22 @@ bool Plot::isValidplotType(PlotType type)
             type == PlotType::SCATTER_PLOT ||
             type == PlotType::CONTOUR_PLOT;
 }
+
+void Plot::setAxisXId(int id)
+{
+    m_axisXSettingId = id;
+    if (id > 0) {
+        m_xAxisSettings = DetectorSettingsDAO().fetchDetectorSettings(id);
+    }
+}
+
+void Plot::setAxisYId(int id)
+{
+    m_axisYSettingId = id;
+    if (id > 0) {
+        m_yAxisSettings = DetectorSettingsDAO().fetchDetectorSettings(id);
+    }
+}
+
+
+

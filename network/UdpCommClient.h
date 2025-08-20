@@ -6,10 +6,14 @@
 #include <QHostAddress>
 #include <QByteArray>
 #include "UdpCommFrame.h"
-#include "gate.h"
+#include "Gate.h"
 #include <QTimer>
+#include "EventData.h"
 
 using SampleData = QVector<QVector<int>>;
+
+
+
 
 /**
  * @brief UdpCommClient class.
@@ -52,7 +56,7 @@ public slots:
     bool sendDetectorSettings(const QModelIndex &topLeft, const QModelIndex &bottomRight,
                               const QList<int> &roles = QList<int>());
     bool sendDriveParameters(int type, int delay, int width, int coolingTime);
-    bool sendGateData(const Gate &gate, int detectorX, int detectorY);
+    bool sendGateData(const Gate &gate);
 
     bool sendDisableDetector(int id);
 
@@ -75,6 +79,7 @@ signals:
                        quint16 senderPort);
 
     void sampleDataReady(QVector<SampleData> data);
+    void eventDataReady(QVector<EventData> &data, int enableSortNum, int sortedNum);
     void handshakeReceived(const QHostAddress &sender, quint16 senderPort);
     void waveformDataReceived(const QVector<int> &data);
 
@@ -113,6 +118,7 @@ private:
     void parseHandshakeFrame(const QByteArray &data);
     void parseWaveformFrame(const QByteArray &data);
     void parseSampleData(const QByteArray &data);
+    void parseEventData(const QByteArray &data);
 };
 
 #endif // UDPCOMMCLIENT_H

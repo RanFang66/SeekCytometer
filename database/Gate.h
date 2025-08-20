@@ -8,7 +8,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include "MeasurementTypeHelper.h"
-
+#include "DetectorSettings.h"
 enum class GateType
 {
     RectangleGate,
@@ -24,7 +24,7 @@ class Gate
 public:
     Gate();
     explicit Gate(int worksheetId, QString name, GateType type,  int xAxisSettingId,
-                  MeasurementType xMeasurementType, int yAxisSettingId, MeasurementType yMeasurementType, const QList<QPointF> &points = QList<QPointF>(), int parentId = 0);
+                  MeasurementType xMeasurementType, int yAxisSettingId, MeasurementType yMeasurementType, const QList<QPoint> &points = QList<QPoint>(), int parentId = 0);
 
     static GateType stringToGateType(const QString &str);
     static QString  gateTypeToString(GateType type);
@@ -33,11 +33,22 @@ public:
     int worksheetId() const;
     QString name() const;
     GateType gateType() const;
-    const QList<QPointF> &points() const;
+    const QList<QPoint> &points() const;
     QJsonArray pointsJsonArray() const;
     QString     pointsJsonString() const;
     int xAxisSettingId() const;
     int yAxisSettingId() const;
+
+    int xAxisDetectorId() const;
+    int yAxisDetectorId() const;
+
+    QString xAxisName() const;
+    QString yAxisName() const;
+
+    const DetectorSettings &xAxisSettings() const;
+    const DetectorSettings &yAxisSettings() const;
+
+
     MeasurementType xMeasurementType() const;
     MeasurementType yMeasurementType() const;
     int parentId() const;
@@ -60,13 +71,15 @@ private:
     int                 m_worksheetId;
     QString             m_name;
     GateType            m_type;
-    QList<QPointF>      m_points;
+    QList<QPoint>       m_points;
     int                 m_xAxisSettingId;
     int                 m_yAxisSettingId;
     MeasurementType     m_xMeasurementType;
     MeasurementType     m_yMeasurementType;
     int                 m_parentId;
 
+    DetectorSettings    m_xAxisSetting;
+    DetectorSettings    m_yAxisSetting;
 };
 
 
@@ -91,7 +104,7 @@ inline GateType Gate::gateType() const
     return m_type;
 }
 
-inline const QList<QPointF> &Gate::points() const
+inline const QList<QPoint> &Gate::points() const
 {
     return m_points;
 }
@@ -104,6 +117,41 @@ inline int Gate::xAxisSettingId() const
 inline int Gate::yAxisSettingId() const
 {
     return m_yAxisSettingId;
+}
+
+inline int Gate::xAxisDetectorId() const
+{
+    return m_xAxisSetting.detectorId();
+}
+
+inline int Gate::yAxisDetectorId() const
+{
+    return m_yAxisSetting.detectorId();
+}
+
+
+inline QString Gate::xAxisName() const
+{
+    return MeasurementTypeHelper::parameterMeasurementType(m_xAxisSetting.parameterName(), m_xMeasurementType);;
+}
+
+inline QString Gate::yAxisName() const
+{
+    if (m_xAxisSettingId != 0) {
+        return MeasurementTypeHelper::parameterMeasurementType(m_yAxisSetting.parameterName(), m_yMeasurementType);
+    } else {
+        return "Count";
+    }
+}
+
+inline const DetectorSettings &Gate::xAxisSettings() const
+{
+    return m_xAxisSetting;
+}
+
+inline const DetectorSettings &Gate::yAxisSettings() const
+{
+    return m_yAxisSetting;
 }
 
 inline MeasurementType Gate::xMeasurementType() const
@@ -136,20 +184,10 @@ inline void Gate::setName(const QString &name)
     m_name = name;
 }
 
-inline void Gate::setPoints(const QList<QPointF> &points)
-{
-    m_points = points;
-}
 
-inline void Gate::setXAxisSettingId(int xAxisSettingId)
-{
-    m_xAxisSettingId = xAxisSettingId;
-}
 
-inline void Gate::setYAxisSettingId(int yAxisSettingId)
-{
-    m_yAxisSettingId = yAxisSettingId;
-}
+
+
 
 inline void Gate::setParentId(int parentId)
 {

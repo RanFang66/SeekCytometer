@@ -28,7 +28,7 @@ ExperimentsBrowser::ExperimentsBrowser(const QString &title, QWidget *parent)
 
 ExperimentsBrowser::~ExperimentsBrowser()
 {
-
+    deleteLater();
 }
 
 void ExperimentsBrowser::initDockWidget()
@@ -268,8 +268,10 @@ void ExperimentsBrowser::onSelectionChanged(const QItemSelection &selected, cons
     QModelIndex currentIndex = selected.indexes().last();
     currentIndexPath = m_model->getNodePath(currentIndex);
     QStringList pathList;
+    currentNodePath.clear();
     for (auto index : currentIndexPath) {
         BrowserData *node = m_model->nodeFromIndex(index);
+        currentNodePath.append(node);
         pathList << node->nodeName();
     }
     currentPathStr = pathList.join("->");

@@ -33,7 +33,8 @@ public:
     bool updateDetectorSettings(const DetectorSettings &detectorSettings);
     bool deleteDetectorSettings(int detectorSettingId);
     bool deleteDetectorSettings(int settingId, int detectorId);
-    QList<DetectorSettings> fetchDetectorSettings(int settingId) const;
+    DetectorSettings fetchDetectorSettings(int detectorSettingId) const;
+    QList<DetectorSettings> fetchDetectorSettingsList(int settingId) const;
     DetectorSettings fetchDetectorSettings(int settingId, int detectorId) const;
     bool isDetectorSettingsExists(int settingId, int detectorId) const;
     bool isDetectorSettingsExists(int settingId, const QString &parameterName) const;

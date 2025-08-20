@@ -1,6 +1,6 @@
 #include "CytometerController.h"
 #include <QDebug>
-#include "DataManager.h"
+#include "EventDataManager.h"
 #include "DetectorSettingsModel.h"
 #include "WorkSheetWidget.h"
 #include "TestDataGenerator.h"
@@ -136,14 +136,16 @@ void CytometerController::onEnterAccquiringState()
 {
     qDebug() << "Entering Acquiring State";
 
-    DataManager::instance().initDataManager(DetectorSettingsModel::instance()->detectorSettings());
-
+    // DataManager::instance().initDataManager(DetectorSettingsModel::instance()->detectorSettings());
+    EventDataManager::instance().initEventDataManager(DetectorSettingsModel::instance()->detectorSettings());
 #if ENABLE_DEBUG
     TestDataGenerator::instance().configTestGenerator(50, 200, 3000, 80000);
-    QObject::connect(&TestDataGenerator::instance(), &TestDataGenerator::testDataGenerated, &DataManager::instance(), &DataManager::addSamples);
+    // QObject::connect(&TestDataGenerator::instance(), &TestDataGenerator::testDataGenerated, &DataManager::instance(), &DataManager::addSamples);
+    QObject::connect(&TestDataGenerator::instance(), &TestDataGenerator::eventDataGenerated, &EventDataManager::instance(), &EventDataManager::addEvents);
     TestDataGenerator::instance().startGenerateData();
 #else
-    QObject::connect(m_udpClient, &UdpCommClient::sampleDataReady, &DataManager::instance(), &DataManager::addSamples);
+    // QObject::connect(m_udpClient, &UdpCommClient::sampleDataReady, &DataManager::instance(), &DataManager::addSamples);
+    QObject::connect(m_udpClient, &UdpCommClient::eventDataReady, &EventDataManager::instance(), &EventDataManager::addEvents);
 #endif
     WorkSheetWidget::instance()->setActive(true);
 }
@@ -154,9 +156,11 @@ void CytometerController::onExitAccquiringState()
 
 #if ENABLE_DEBUG
     TestDataGenerator::instance().stopGenerateData();
-    QObject::disconnect(&TestDataGenerator::instance(), &TestDataGenerator::testDataGenerated, &DataManager::instance(), &DataManager::addSamples);
+    // QObject::disconnect(&TestDataGenerator::instance(), &TestDataGenerator::testDataGenerated, &DataManager::instance(), &DataManager::addSamples);
+    QObject::disconnect(&TestDataGenerator::instance(), &TestDataGenerator::eventDataGenerated, &EventDataManager::instance(), &EventDataManager::addEvents);
 #else
-    QObject::disconnect(m_udpClient, &UdpCommClient::sampleDataReady, &DataManager::instance(), &DataManager::addSamples);
+    // QObject::disconnect(m_udpClient, &UdpCommClient::sampleDataReady, &DataManager::instance(), &DataManager::addSamples);
+    QObject::disconnect(m_udpClient, &UdpCommClient::eventDataReady, &EventDataManager::instance(), &EventDataManager::addEvents);
 #endif
     WorkSheetWidget::instance()->setActive(false);
 }
@@ -165,13 +169,16 @@ void CytometerController::onEnterSortingState()
 {
     qDebug() << "Entering Sorting State";
 
-    DataManager::instance().initDataManager(DetectorSettingsModel::instance()->detectorSettings());
+    // DataManager::instance().initDataManager(DetectorSettingsModel::instance()->detectorSettings());
+    EventDataManager::instance().initEventDataManager(DetectorSettingsModel::instance()->detectorSettings());
 #if ENABLE_DEBUG
     TestDataGenerator::instance().configTestGenerator(50, 200, 0, 131072);
-    QObject::connect(&TestDataGenerator::instance(), &TestDataGenerator::testDataGenerated, &DataManager::instance(), &DataManager::addSamples);
+    // QObject::connect(&TestDataGenerator::instance(), &TestDataGenerator::testDataGenerated, &DataManager::instance(), &DataManager::addSamples);
+    QObject::connect(&TestDataGenerator::instance(), &TestDataGenerator::eventDataGenerated, &EventDataManager::instance(), &EventDataManager::addEvents);
     TestDataGenerator::instance().startGenerateData();
 #else
-    QObject::connect(m_udpClient, &UdpCommClient::sampleDataReady, &DataManager::instance(), &DataManager::addSamples);
+    // QObject::connect(m_udpClient, &UdpCommClient::sampleDataReady, &DataManager::instance(), &DataManager::addSamples);
+    QObject::connect(m_udpClient, &UdpCommClient::eventDataReady, &EventDataManager::instance(), &EventDataManager::addEvents);
 #endif
     WorkSheetWidget::instance()->setActive(true);
 
@@ -183,9 +190,11 @@ void CytometerController::onExitSortingState()
 
 #if ENABLE_DEBUG
     TestDataGenerator::instance().stopGenerateData();
-    QObject::disconnect(&TestDataGenerator::instance(), &TestDataGenerator::testDataGenerated, &DataManager::instance(), &DataManager::addSamples);
+    // QObject::disconnect(&TestDataGenerator::instance(), &TestDataGenerator::testDataGenerated, &DataManager::instance(), &DataManager::addSamples);
+    QObject::disconnect(&TestDataGenerator::instance(), &TestDataGenerator::eventDataGenerated, &EventDataManager::instance(), &EventDataManager::addEvents);
 #else
-    QObject::disconnect(m_udpClient, &UdpCommClient::sampleDataReady, &DataManager::instance(), &DataManager::addSamples);
+    // QObject::disconnect(m_udpClient, &UdpCommClient::sampleDataReady, &DataManager::instance(), &DataManager::addSamples);
+    QObject::disconnect(m_udpClient, &UdpCommClient::eventDataReady, &EventDataManager::instance(), &EventDataManager::addEvents);
 #endif
     WorkSheetWidget::instance()->setActive(false);
 
@@ -196,7 +205,9 @@ void CytometerController::onEnterErrorState()
     qDebug() << "Entering Error State";
 #if ENABLE_DEBUG
     TestDataGenerator::instance().stopGenerateData();
-    QObject::disconnect(&TestDataGenerator::instance(), &TestDataGenerator::testDataGenerated, &DataManager::instance(), &DataManager::addSamples);
+    // QObject::disconnect(&TestDataGenerator::instance(), &TestDataGenerator::testDataGenerated, &DataManager::instance(), &DataManager::addSamples);
+    QObject::disconnect(&TestDataGenerator::instance(), &TestDataGenerator::eventDataGenerated, &EventDataManager::instance(), &EventDataManager::addEvents);
+
     WorkSheetWidget::instance()->setActive(false);
 #endif
 }
@@ -207,7 +218,8 @@ void CytometerController::onExitErrorState()
 
 #if ENABLE_DEBUG
     TestDataGenerator::instance().configTestGenerator(100, 500, 0, 32768);
-    QObject::connect(&TestDataGenerator::instance(), &TestDataGenerator::testDataGenerated, &DataManager::instance(), &DataManager::addSamples);
+    // QObject::connect(&TestDataGenerator::instance(), &TestDataGenerator::testDataGenerated, &DataManager::instance(), &DataManager::addSamples);
+    QObject::connect(&TestDataGenerator::instance(), &TestDataGenerator::eventDataGenerated, &EventDataManager::instance(), &EventDataManager::addEvents);
     TestDataGenerator::instance().startGenerateData();
 #endif
 }

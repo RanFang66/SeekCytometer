@@ -23,11 +23,19 @@ public:
     static QString measurementTypeToString(MeasurementType type);
     static QString parameterMeasurementType(const QString &parameter, MeasurementType type);
     static bool isValidMeasurementType(MeasurementType type);
+    static int MeasurementTypeIndex(MeasurementType type);
+    static const QVector<MeasurementType> &measurementTypeList();
 
 private:
     MeasurementTypeHelper() = delete;
+    static QVector<MeasurementType> typeList;
     static const std::unordered_map<QString, MeasurementType> stringToEnumMap;
     static const std::unordered_map<MeasurementType, QString> enumToStringMap;
 };
+
+inline const QVector<MeasurementType> &MeasurementTypeHelper::measurementTypeList()
+{
+    return typeList;
+}
 
 #endif // MEASUREMENTTYPEHELPER_H

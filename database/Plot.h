@@ -3,6 +3,7 @@
 
 #include <QString>
 #include "MeasurementTypeHelper.h"
+#include "DetectorSettings.h"
 
 enum class PlotType {
     HISTOGRAM_PLOT,
@@ -28,10 +29,16 @@ public:
     PlotType plotType() const { return m_plotType; }
     int     axisXId() const { return m_axisXSettingId; }
     int     axisYId() const { return m_axisYSettingId; }
-    int     axisXDetectorId() const { return m_axisXDetectorId; }
-    int     axisYDetectorId() const { return m_axisYDetectorId; }
-    QString axisXName() const { return m_axisXName; }
-    QString axisYName() const { return m_axisYName; }
+    int     axisXDetectorId() const { return m_xAxisSettings.detectorId(); }
+    int     axisYDetectorId() const { return m_yAxisSettings.detectorId(); }
+    QString axisXName() const { return MeasurementTypeHelper::parameterMeasurementType(m_xAxisSettings.parameterName(), m_xMeasurementType); }
+    QString axisYName() const {
+        if (m_axisYSettingId != 0) {
+            return MeasurementTypeHelper::parameterMeasurementType(m_yAxisSettings.parameterName(), m_yMeasurementType);
+        } else {
+            return "Count";
+        }
+    }
     MeasurementType xMeasurementType() const { return m_xMeasurementType; }
     MeasurementType yMeasurementType() const { return m_yMeasurementType; }
 
@@ -40,12 +47,8 @@ public:
     void setName(const QString &name) {m_plotName = name; }
     void setWorkSheetId(int id) { m_worksheetId = id; }
     void setPlotType(PlotType type) { m_plotType = type; }
-    void setAxisXId(int id) { m_axisXSettingId = id; }
-    void setAxisYId(int id) { m_axisYSettingId = id; }
-    void setAxisXDetectorId(int id) { m_axisXDetectorId = id; }
-    void setAxisYDetectorId(int id) { m_axisYDetectorId = id; }
-    void setAxisXName(const QString &name) { m_axisXName = name; }
-    void setAxisYName(const QString &name) { m_axisYName = name; }
+    void setAxisXId(int id);
+    void setAxisYId(int id);
     void setXMeasurementType(MeasurementType type) { m_xMeasurementType = type; }
     void setYMeasurementType(MeasurementType type) { m_yMeasurementType = type; }
 
@@ -53,16 +56,15 @@ public:
 private:
     int             m_id;
     QString         m_plotName;
-    QString         m_axisXName;
-    QString         m_axisYName;
     int             m_worksheetId;
     PlotType        m_plotType;
     int             m_axisXSettingId;
     int             m_axisYSettingId;
-    int             m_axisXDetectorId;
-    int             m_axisYDetectorId;
     MeasurementType m_xMeasurementType;
     MeasurementType m_yMeasurementType;
+
+    DetectorSettings m_xAxisSettings;
+    DetectorSettings m_yAxisSettings;
 };
 
 #endif // PLOT_H

@@ -9,7 +9,10 @@
 #include <QCheckBox>
 #include <QLineEdit>
 #include <QProgressBar>
-#include "gate.h"
+#include "Gate.h"
+#include <QTimer>
+
+
 class SortingWidget : public QDockWidget
 {
     Q_OBJECT
@@ -19,18 +22,26 @@ public:
         static SortingWidget instance("Sort Control");
         return &instance;
     }
-    void updatePopulation(int workSheetId);
+
+
+    ~SortingWidget();
 
     const Gate getCurrentPopulation() const;
 
+public slots:
+    void updatePopulation();
+
+
+
 signals:
     void driveParametersChanged(int type, int delay, int width, int coolingTime);
-    void gateChanged(const Gate &gate, int detectorX, int detectorY);
+    void gateChanged(const Gate &gate);
 
 private slots:
     void changeDriveParameters();
     void changeGate();
     void startSorting();
+    void updateDisplay();
 
 
 private:
@@ -40,6 +51,8 @@ private:
 
 
     void initSortingWidget();
+    void resetSortingStatus();
+
 
     int m_driveType;
     int m_driveDelay;
@@ -48,6 +61,9 @@ private:
 
     Gate m_currGate;
 
+    QTimer *updateTimer;
+
+    int  m_sortTime;
 
     QPushButton *btnRunSorting;
     QPushButton *btnPauseSorting;
@@ -61,12 +77,18 @@ private:
     QCheckBox   *cBoxContinousMode;
     QLineEdit   *editTargetEvents;
 
-    QLabel          *sortNum;
-    QLabel          *abortNum;
-    QLabel          *sortRate;
-    QLabel          *abortRate;
-    QLabel          *sortEfficiency;
-    QProgressBar    *progressSort;
+
+    QLabel          *lblEventsNum;
+    QLabel          *lblSortTime;
+    QLabel          *lblSortNum;
+    QLabel          *lblDiscardNum;
+    QLabel          *lblProcessRate;
+    QLabel          *lblSortRate;
+    QLabel          *lblSortRatio;
+    QLabel          *lblDiscardRatio;
+
+
+    // QProgressBar    *progressSort;
 };
 
 #endif // SORTINGWIDGET_H

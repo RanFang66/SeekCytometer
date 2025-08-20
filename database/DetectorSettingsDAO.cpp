@@ -79,7 +79,37 @@ bool DetectorSettingsDAO::deleteDetectorSettings(int settingId, int detectorId)
     return true;
 }
 
-QList<DetectorSettings> DetectorSettingsDAO::fetchDetectorSettings(int settingId) const
+DetectorSettings DetectorSettingsDAO::fetchDetectorSettings(int detectorSettingId) const
+{
+    DetectorSettings settings;
+
+    QSqlQuery query(m_db);
+    query.prepare("SELECT * FROM DetectorSettings WHERE detector_setting_id = :detector_setting_id");
+    query.bindValue(":detector_setting_id", detectorSettingId);
+
+    if (!query.exec()) {
+        handleError(__FUNCTION__, query);
+        return settings;
+    }
+
+    if (query.next()) {
+        settings.setId(query.value("detector_setting_id").toInt());
+        settings.setSettingId(query.value("setting_id").toInt());
+        settings.setDetectorId(query.value("detector_id").toInt());
+        settings.setParameterName(query.value("parameter_name").toString());
+        settings.setDetectorGain(query.value("detector_gain").toInt());
+        settings.setDetectorOffset(query.value("detector_offset").toInt());
+        settings.enableThreshold(query.value("enable_threshold").toBool());
+        settings.setThresholdValue(query.value("threshold_value").toInt());
+        settings.enableHeight(query.value("enable_height").toBool());
+        settings.enableWidth(query.value("enable_width").toBool());
+        settings.enableArea(query.value("enable_area").toBool());
+    }
+
+    return settings;
+}
+
+QList<DetectorSettings> DetectorSettingsDAO::fetchDetectorSettingsList(int settingId) const
 {
     QList<DetectorSettings> detectorSettings;
 
