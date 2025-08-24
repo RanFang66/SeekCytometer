@@ -13,6 +13,8 @@ EventData::EventData(const QVector<int> &channels)
     eventId = 0;
     enableSorted = false;
     isSorted = false;
+    preTimeUs = 0;
+    postTimeUs = 0;
     enabledChannels = channels;
     data.resize(channels.size(), QVector<int>(3, 0));
 }
@@ -25,8 +27,13 @@ EventData::EventData(const QVector<int> &channels, const QByteArray &bytes)
 
 
     quint32 header;
-    quint32 magicWord;
+    quint32 headMagicWord;
+    quint32 tailMagicWord;
+
+    stream >> headMagicWord;
     stream >> header;
+    stream >> preTimeUs;
+    stream >> postTimeUs;
     eventId = header & 0x00FFFFFF;
     enableSorted = ((header & 0x01000000) != 0);
     isSorted = ((header & 0x02000000) != 0);
@@ -35,7 +42,11 @@ EventData::EventData(const QVector<int> &channels, const QByteArray &bytes)
             stream >> data[i][j];
         }
     }
-    stream >> magicWord;
+    stream >> tailMagicWord;
+
+    if (headMagicWord != HEAD_MAGIC || tailMagicWord != TAIL_MAGIC) {
+        qWarning() << "Head or Tail magic word does not match!";
+    }
 }
 
 EventData::EventData(const QVector<int> &channels, QDataStream &stream)
@@ -43,7 +54,10 @@ EventData::EventData(const QVector<int> &channels, QDataStream &stream)
     enabledChannels = channels;
     data.resize(channels.size(), QVector<int>(3, 0));
     quint32 header;
-    quint32 magicWord;
+    quint32 headMagicWord;
+    quint32 tailMagicWord;
+
+    stream >> headMagicWord;
     stream >> header;
     eventId = header & 0x00FFFFFF;
     enableSorted = ((header & 0x01000000) != 0);
@@ -53,9 +67,9 @@ EventData::EventData(const QVector<int> &channels, QDataStream &stream)
             stream >> data[i][j];
         }
     }
-    stream >> magicWord;
-    if (magicWord != 0x55AA55AA) {
-        qDebug() << "Magic word error!" << magicWord;
+    stream >> tailMagicWord;
+    if (headMagicWord != HEAD_MAGIC || tailMagicWord != TAIL_MAGIC) {
+        qWarning() << "Head or Tail magic word does not match!";
     }
 }
 

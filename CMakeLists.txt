@@ -119,6 +119,10 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         data_manage/EventDataManager.h data_manage/EventDataManager.cpp
         data_manage/EventData.h data_manage/EventData.cpp
         datamodel/GatesModel.h datamodel/GatesModel.cpp
+        delegate/TubeButtonDelegate.h delegate/TubeButtonDelegate.cpp
+        widgets/BrowserView.h widgets/BrowserView.cpp
+        datamodel/TubeSelectModel.h datamodel/TubeSelectModel.cpp
+        widgets/SpeedMeasureWidget.h widgets/SpeedMeasureWidget.cpp
 
     )
 # Define target properties for Android with Qt 6 as:
@@ -146,7 +150,7 @@ endif()
 target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Sql Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Charts Qt${QT_VERSION_MAJOR}::StateMachine)
 
 # FOR DEBUG
-target_compile_definitions(SeekCytometer PRIVATE ENABLE_DEBUG=1)
+target_compile_definitions(SeekCytometer PRIVATE ENABLE_DEBUG=0)
 
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

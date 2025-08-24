@@ -6,7 +6,7 @@
 #include <QItemSelectionModel>
 #include <QStatusBar>
 #include <QTreeView>
-#include "BrowserDataModel.h"
+#include "BrowserView.h"
 
 class ExperimentsBrowser : public QDockWidget
 {
@@ -41,6 +41,9 @@ private:
 
     BrowserDataModel *m_model;
     QItemSelectionModel *m_theSelection;
+
+    BrowserView *m_browserView;
+
     QAction *addExperiment;
     QAction *addSpecimen;
     QAction *addTube;

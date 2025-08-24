@@ -20,6 +20,7 @@
 #include <QFormLayout>
 #include <QMessageBox>
 
+
 ExperimentsBrowser::ExperimentsBrowser(const QString &title, QWidget *parent)
     : QDockWidget{title, parent}
 {
@@ -34,8 +35,16 @@ ExperimentsBrowser::~ExperimentsBrowser()
 void ExperimentsBrowser::initDockWidget()
 {
     qRegisterMetaType<NodeType>("NodeType");
-    m_model = new BrowserDataModel(this);
-    m_theSelection = new QItemSelectionModel(m_model);
+
+    m_browserView = new BrowserView(this);
+
+
+    // m_model = new BrowserDataModel(this);
+    // m_theSelection = new QItemSelectionModel(m_model);
+
+    treeView = m_browserView->treeView();
+    m_model = m_browserView->browserModel();
+    m_theSelection = m_browserView->selectionModel();
 
     QWidget *mainWidget = new QWidget();
 
@@ -75,24 +84,24 @@ void ExperimentsBrowser::initDockWidget()
     statusBar = new QStatusBar(mainWidget);
     statusBar->showMessage("Status: IDLE");
 
-    treeView = new QTreeView(mainWidget);
-    treeView->setModel(m_model);
-    treeView->setSelectionModel(m_theSelection);
-    treeView->setSelectionMode(QAbstractItemView::SingleSelection);
-    treeView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    // treeView = new QTreeView(mainWidget);
+    // treeView->setModel(m_model);
+    // treeView->setSelectionModel(m_theSelection);
+    // treeView->setSelectionMode(QAbstractItemView::SingleSelection);
+    // treeView->setSelectionBehavior(QAbstractItemView::SelectRows);
 
     m_LoginUserIndex = m_model->findIndex(NodeType::User, User::loginUser().name());
 
 
     QVBoxLayout *layout = new QVBoxLayout(mainWidget);
     layout->addWidget(toolBar);
-    layout->addWidget(treeView);
+    layout->addWidget(m_browserView);
     layout->addWidget(statusBar);
 
-    treeView->setWindowTitle("Experiment Data");
-    treeView->resize(800, 1200);
-    treeView->show();
-    treeView->setHeaderHidden(false);
+    // treeView->setWindowTitle("Experiment Data");
+    // treeView->resize(800, 1200);
+    // treeView->show();
+    // treeView->setHeaderHidden(false);
 
     mainWidget->setLayout(layout);
     setWidget(mainWidget);

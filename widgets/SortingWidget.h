@@ -85,6 +85,7 @@ private:
     QLabel          *lblProcessRate;
     QLabel          *lblSortRate;
     QLabel          *lblSortRatio;
+    QLabel          *lblCellSpeed;
     QLabel          *lblDiscardRatio;
 
 

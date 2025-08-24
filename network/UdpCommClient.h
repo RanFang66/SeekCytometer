@@ -58,6 +58,8 @@ public slots:
     bool sendDriveParameters(int type, int delay, int width, int coolingTime);
     bool sendGateData(const Gate &gate);
 
+    bool sendSpeedMeasureSetting(int preId, int postId, int preThresh, int dist);
+
     bool sendDisableDetector(int id);
 
 private slots:
@@ -79,7 +81,7 @@ signals:
                        quint16 senderPort);
 
     void sampleDataReady(QVector<SampleData> data);
-    void eventDataReady(QVector<EventData> &data, int enableSortNum, int sortedNum);
+    void eventDataReady(QVector<EventData> data, int enableSortNum, int sortedNum, double timeSpan);
     void handshakeReceived(const QHostAddress &sender, quint16 senderPort);
     void waveformDataReceived(const QVector<int> &data);
 

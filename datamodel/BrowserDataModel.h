@@ -46,9 +46,27 @@ public:
 
     QList<QModelIndex> getNodePath(const QModelIndex &Index);
 
+    bool isTubeSelected(int tubeId) const;
+
+    int getSelectedTubeId() const;
+
+    void setSelectedTube(int tubeId);
+
+    void clearTubeSelection();
+
+    enum CustomRole {
+        IsSelectedRole = Qt::UserRole + 100,
+        IsTubeRole = Qt::UserRole + 101,
+        NodeIdRole = Qt::UserRole + 102,
+    };
+
+signals:
+    void tubeSelectionChanged(int tubeId);
+
+
 private:
     BrowserData *m_rootNode;
-
+    int m_selectedTubeId = -1;
     enum Column {
         COLUMN_NAME,
         COLUMN_TYPE,
@@ -58,5 +76,21 @@ private:
 
     void deleteTree(BrowserData *node);
 };
+
+inline bool BrowserDataModel::isTubeSelected(int tubeId) const
+{
+    return m_selectedTubeId == tubeId;
+}
+
+inline int BrowserDataModel::getSelectedTubeId() const
+{
+    return m_selectedTubeId;
+}
+
+
+inline void BrowserDataModel::clearTubeSelection()
+{
+    m_selectedTubeId = -1;
+}
 
 #endif // BROWSERDATAMODEL_H

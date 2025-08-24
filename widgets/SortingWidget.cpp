@@ -79,6 +79,7 @@ void SortingWidget::initSortingWidget()
     lblSortRatio = new QLabel("0.00%", this);
     lblDiscardRatio = new QLabel("0.00%", this);
     lblSortTime = new QLabel("0 s", this);
+    lblCellSpeed = new QLabel("0 m/s", this);
     // progressSort = new QProgressBar(this);
 
 
@@ -106,6 +107,8 @@ void SortingWidget::initSortingWidget()
     statusLayout->addWidget(new QLabel(tr("Discard Ratio"), this), 3, 2);
     statusLayout->addWidget(lblDiscardRatio, 3, 3);
 
+    statusLayout->addWidget(new QLabel(tr("Cell Speed"), this), 4, 0);
+    statusLayout->addWidget(lblCellSpeed, 4, 1);
 
     // statusLayout->addWidget(new QLabel(tr("Sort Efficiency"), this), 3, 0);
     // statusLayout->addWidget(lblSortEfficiency, 3, 1);
@@ -116,9 +119,9 @@ void SortingWidget::initSortingWidget()
 
 
     QVBoxLayout *mainLayout = new QVBoxLayout(mainWidget);
-    mainLayout->addWidget(groupDrive);
-    mainLayout->addWidget(groupSetup);
-    mainLayout->addWidget(groupStatus);
+    mainLayout->addWidget(groupDrive, 1);
+    mainLayout->addWidget(groupSetup, 1);
+    mainLayout->addWidget(groupStatus, 2);
     mainWidget->setLayout(mainLayout);
 
     setWidget(mainWidget);
@@ -150,6 +153,7 @@ void SortingWidget::resetSortingStatus()
     lblSortRate->setText("0 /s");
     lblSortRatio->setText("0.00%");
     lblDiscardRatio->setText("0.00%");
+    lblCellSpeed->setText("0 m/s");
 }
 
 SortingWidget::~SortingWidget()
@@ -226,7 +230,7 @@ void SortingWidget::updateDisplay()
 
     double sortRatio = (eventsNum > 0) ? (static_cast<double>(sortNum) / eventsNum * 100.0) : 0;
     double discardRatio = (eventsNum > 0) ? (static_cast<double>(discardNum) / eventsNum * 100.0) : 0;
-
+    double speed = dataManager.speedMeasured();
 
     lblSortTime->setText(QString("%1 s").arg(m_sortTime));
     lblEventsNum->setText(QString::number(eventsNum));
@@ -236,6 +240,7 @@ void SortingWidget::updateDisplay()
     lblSortRate->setText(QString::asprintf("%.1f / s", sortRate));
     lblSortRatio->setText(QString::asprintf("%.2f %%", sortRatio));
     lblDiscardRatio->setText(QString::asprintf("%.2f %%", discardRatio));
+    lblCellSpeed->setText(QString::asprintf("%.2f m/s", speed));
 }
 
 

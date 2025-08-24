@@ -5,7 +5,10 @@
 #include <CytometerSettingsDAO.h>
 
 CytometerSettingsWidget::CytometerSettingsWidget(const QString &title, QWidget *parent)
-    : QDockWidget{title, parent}, m_generalInfoWidget(new CytometerGeneralInfo(this)), m_detectorSettingsWidget(new DetectorSettingsWidget(this))
+    : QDockWidget{title, parent},
+    m_generalInfoWidget(new CytometerGeneralInfo(this)),
+    m_detectorSettingsWidget(new DetectorSettingsWidget(this)),
+    m_speedMeasureWidget(SpeedMeasureWidget::instance())
 {
     initDockWidget();
 }
@@ -25,6 +28,7 @@ void CytometerSettingsWidget::onCytometerSettingsChanged(int cytometerSettingId)
     m_cytometerSettings = CytometerSettingsDAO().fetchCytometerSettings(cytometerSettingId);
     m_generalInfoWidget->onCytometerSettingsChanged(m_cytometerSettings);
     m_detectorSettingsWidget->onCytometerSettingChanged(cytometerSettingId);
+    m_speedMeasureWidget->onCytometerSettingChanged(cytometerSettingId);
 }
 
 void CytometerSettingsWidget::initDockWidget()
@@ -39,6 +43,7 @@ void CytometerSettingsWidget::initDockWidget()
 
     tabWidget->addTab(m_generalInfoWidget, "General");
     tabWidget->addTab(m_detectorSettingsWidget, "Detectors");
+    tabWidget->addTab(m_speedMeasureWidget, "Speed Measure");
     tabWidget->addTab(new QWidget(), "Lasers");
     tabWidget->addTab(new QWidget(), "Thresholds");
     tabWidget->addTab(new QWidget(), "Compensation");

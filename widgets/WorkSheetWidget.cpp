@@ -8,10 +8,9 @@
 // #include "DataManager.h"
 // #include "GatesDAO.h"
 #include <QInputDialog>
-#include "SortingWidget.h"
 #include "EventDataManager.h"
 #include "GatesModel.h"
-
+#include <QSplitter>
 
 WorkSheetWidget::WorkSheetWidget(const QString &title, QWidget *parent)
     : QDockWidget{title, parent},
@@ -77,6 +76,7 @@ void WorkSheetWidget::addWorkSheetView(int worksheetId)
             for (const Gate &gate : m_model->getGateList()) {
                 if (gate.xAxisSettingId() == plot.axisXId() && gate.yAxisSettingId() == plot.axisYId()
                     && gate.xMeasurementType() == plot.xMeasurementType() && gate.yMeasurementType() == plot.yMeasurementType()) {
+                plotBase->updateAxisRanges(gate);
                     workSheetView->scene()->addNewGate(gate.gateType(), gate, plotBase);
                 }
             }
@@ -173,10 +173,17 @@ void WorkSheetWidget::initDockWidget()
 
     tabWidget->setTabsClosable(true);
 
+    QSplitter *splitter = new QSplitter(Qt::Vertical, this);
+    splitter->addWidget(tabWidget);
+    splitter->addWidget(tableView);
+    splitter->setStretchFactor(0, 3);
+    splitter->setStretchFactor(1, 1);
+    splitter->setChildrenCollapsible(false); // 防止部件被完全折叠
+
     QVBoxLayout *layout = new QVBoxLayout(mainWidget);
     layout->addWidget(toolBar);
-    layout->addWidget(tabWidget);
-    layout->addWidget(tableView);
+    layout->addWidget(splitter);
+
 
     mainWidget->setLayout(layout);
     setWidget(mainWidget);

@@ -25,6 +25,7 @@ enum class CommCmdType {
     CMD_SORTING_STOP = 0x09,
 
     CMD_GATE_SETTINGS = 0x0A,
+    CMD_SPEED_MEASURE_SETTINGS = 0x0B,
 
     CMD_PULSE_DATA = 0x10,
     CMD_WAVEFORM_DATA = 0x11,
