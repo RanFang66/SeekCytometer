@@ -2,7 +2,7 @@
 #include "DetectorSettingsDAO.h"
 
 DetectorSettingsModel::DetectorSettingsModel(QObject *parent)
-    : QAbstractTableModel{parent}
+    : QAbstractTableModel{parent}, m_settingId(0)
 {}
 
 
@@ -109,8 +109,9 @@ Qt::ItemFlags DetectorSettingsModel::flags(const QModelIndex &index) const
 }
 
 void DetectorSettingsModel::resetDetectorSettingModel(int settingId)
-{
+{    
     QMutexLocker locker(&m_mutex);
+    m_settingId = settingId;
     beginResetModel();
     m_settingsList = DetectorSettingsDAO().fetchDetectorSettingsList(settingId);
     endResetModel();

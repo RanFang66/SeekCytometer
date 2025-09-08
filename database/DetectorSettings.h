@@ -13,7 +13,7 @@ public:
     DetectorSettings();
     explicit DetectorSettings(int settingId, int detectorId, QString parameter, int detectorGain = 100, int detectorOffset = 0,
                               bool enableThreshold = false, int thresholdValue = 0,
-                              bool enableHeight = true, bool enableWidth = false, bool enableArea = false);
+                              bool enableHeight = true, bool enableWidth = true, bool enableArea = true);
     explicit DetectorSettings(int settingId, const Detector &detector);
 
     static QString measurementTypeToString(MeasurementType type);

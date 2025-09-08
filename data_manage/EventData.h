@@ -19,26 +19,28 @@ public:
     int getData(int channelId, MeasurementType type) const;
     bool isEnabledSort() const;
     bool isRealSorted() const;
+    bool isValidSpeedMeasure() const;
     int getEventId() const;
-    quint32 getPreTimeUs() const;
+    quint32 getDiffTimeUs() const;
     quint32 getPostTimeUs() const;
-    quint32 getTimeSpanUs() const;
 
     void setEventId(int id);
     void setData(int channelId, MeasurementType type, int val);
     void setEnableSort(bool enabled);
     void setSorted(bool enabled);
-    void setPreTimeUs(quint32 time);
+    void setValidSpeedMeasure(bool enabled);
+    void setDiffTimeUs(quint32 time);
     void setPostTimeUs(quint32 time);
 
     static constexpr quint32 HEAD_MAGIC = 0x55AA55AA;
     static constexpr quint32 TAIL_MAGIC = 0xAA55AA55;
 private:
     quint32                 eventId;
-    quint32                 preTimeUs;
+    quint32                 diffTimeUs;
     quint32                 postTimeUs;
     bool                    enableSorted;
     bool                    isSorted;
+    bool                    isValidMeasure;
     QVector<int>            enabledChannels;
     QVector<QVector<int>>   data;
 };
@@ -79,27 +81,24 @@ inline bool EventData::isRealSorted() const
     return isSorted;
 }
 
+inline bool EventData::isValidSpeedMeasure() const
+{
+    return isValidMeasure;
+}
+
 inline int EventData::getEventId() const
 {
     return eventId;
 }
 
-inline quint32 EventData::getPreTimeUs() const
+inline quint32 EventData::getDiffTimeUs() const
 {
-    return preTimeUs;
+    return diffTimeUs;
 }
 
 inline quint32 EventData::getPostTimeUs() const
 {
     return postTimeUs;
-}
-
-inline quint32 EventData::getTimeSpanUs() const
-{
-    if (postTimeUs > preTimeUs) {
-        return (postTimeUs-preTimeUs);
-    }
-    return 0;
 }
 
 inline void EventData::setEventId(int id)
@@ -122,9 +121,14 @@ inline void EventData::setSorted(bool enabled)
     isSorted = enabled;
 }
 
-inline void EventData::setPreTimeUs(quint32 time)
+inline void EventData::setValidSpeedMeasure(bool enabled)
 {
-    preTimeUs = time;
+    isValidMeasure = enabled;
+}
+
+inline void EventData::setDiffTimeUs(quint32 time)
+{
+    diffTimeUs = time;
 }
 
 inline void EventData::setPostTimeUs(quint32 time)

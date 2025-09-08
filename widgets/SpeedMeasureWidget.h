@@ -19,7 +19,7 @@ public:
         return &instance;
     }
     ~SpeedMeasureWidget();
-    void onCytometerSettingChanged(int settingId);
+    void onCytometerSettingChanged();
 
     int preChannelId() const;
     int postChannelId() const;
@@ -28,7 +28,7 @@ public:
 
 
 signals:
-    void speedMeasureSettingChangged(int preCh, int postCh, int preThresh, int dist);
+    void speedMeasureSettingChangged(int preCh, int postCh, int preThresh, int dist, int maxTimeSpan);
 
 private:
     explicit SpeedMeasureWidget(QWidget *parent = nullptr);
@@ -39,6 +39,7 @@ private:
     QComboBox *comboPreCh;
     QComboBox *comboPostCh;
     QSpinBox *spinDist;
+    QSpinBox *spinMaxTimeDiff;
     QPushButton *btnConfirm;
     QLineEdit *editPreChThresh;
 
@@ -46,6 +47,7 @@ private:
     int m_postChId;
     int m_dist;
     int m_preChThresh;
+    int m_maxTimeSpan;
 };
 
 inline int SpeedMeasureWidget::preChannelId() const

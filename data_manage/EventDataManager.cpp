@@ -64,9 +64,11 @@ void EventDataManager::saveEventToCsvFile(const QVector<EventData> &updateData)
             dataStream << data.getEventId();
             dataStream << ",";
 
+            dataStream << data.isValidSpeedMeasure();
+            dataStream << ",";
             dataStream << data.getPostTimeUs();
             dataStream << ",";
-            dataStream << data.getTimeSpanUs();
+            dataStream << data.getDiffTimeUs();
             dataStream << ",";
             if (data.isEnabledSort()) {
                 dataStream << "true";
@@ -126,6 +128,8 @@ void EventDataManager::initEventDataManager(const QVector<DetectorSettings> &set
     if (dataFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODeviceBase::Append)) {
         QTextStream textStream(&dataFile);
         textStream << "Event ID";
+        textStream << ",";
+        textStream << "Valid Speed";
         textStream << ",";
         textStream << "Start Time(s)";
         textStream << ",";

@@ -84,6 +84,13 @@ void WorkSheetScene::addNewGate(GateType gateType, const Gate &gate, PlotBase *p
     update();
 }
 
+void WorkSheetScene::resetPlots()
+{
+    for (PlotBase *plot : m_plots) {
+        plot->resetPlot();
+    }
+}
+
 
 void WorkSheetScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {

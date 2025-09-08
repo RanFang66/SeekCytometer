@@ -67,6 +67,7 @@ private:
 
     QPushButton *btnRunSorting;
     QPushButton *btnPauseSorting;
+    QPushButton *btnConfirmSetting;
     QLineEdit   *editDriveWidth;
     QLineEdit   *editDriveStrength;
     QLineEdit   *editCoolingTime;

@@ -24,6 +24,8 @@ public:
     PlotBase* addNewPlot(PlotType plotType, const Plot &plot);
     void addNewGate(GateType gateType, const Gate &gate, PlotBase *parent);
 
+
+    void resetPlots();
     QList<PlotBase*> plots() const { return m_plots; }
     QList<GateItem*> gates() const {return m_gateItems;}
 

@@ -116,6 +116,7 @@ void UserManageDialog::initUserEditView()
 void UserManageDialog::saveUser()
 {
     qDebug() << "UserManageDialog::saveUser()";
+
     stackedWidget->setCurrentIndex(userListIndex);
 }
 

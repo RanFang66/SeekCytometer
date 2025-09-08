@@ -58,7 +58,7 @@ public slots:
     bool sendDriveParameters(int type, int delay, int width, int coolingTime);
     bool sendGateData(const Gate &gate);
 
-    bool sendSpeedMeasureSetting(int preId, int postId, int preThresh, int dist);
+    bool sendSpeedMeasureSetting(int preId, int postId, int preThresh, int dist, int maxTimeSpan);
 
     bool sendDisableDetector(int id);
 

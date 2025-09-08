@@ -66,3 +66,9 @@ void HistogramPlot::paintPlot(QPainter *painter)
     painter->restore();
 }
 
+void HistogramPlot::resetPlot()
+{
+    m_bins.clear();
+    m_data.clear();
+}
+

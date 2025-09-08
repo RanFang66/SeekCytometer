@@ -28,7 +28,7 @@ void CytometerSettingsWidget::onCytometerSettingsChanged(int cytometerSettingId)
     m_cytometerSettings = CytometerSettingsDAO().fetchCytometerSettings(cytometerSettingId);
     m_generalInfoWidget->onCytometerSettingsChanged(m_cytometerSettings);
     m_detectorSettingsWidget->onCytometerSettingChanged(cytometerSettingId);
-    m_speedMeasureWidget->onCytometerSettingChanged(cytometerSettingId);
+    m_speedMeasureWidget->onCytometerSettingChanged();
 }
 
 void CytometerSettingsWidget::initDockWidget()

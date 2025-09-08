@@ -18,6 +18,13 @@ void DetectorSettingsWidget::initWidget()
 {
     tableView->setModel(m_model);
     tableView->setEditTriggers(QAbstractItemView::DoubleClicked);
+    tableView->hideColumn(4);   // Enable Height
+    tableView->hideColumn(5);   // Enable Width
+    tableView->hideColumn(6);   // Enable Area
+    tableView->hideColumn(7);   // Enable Thresh
+
+
+
 
     CheckBoxDelegate *delegate = new CheckBoxDelegate(tableView);
     tableView->setItemDelegateForColumn(DetectorSettingsModel::EnableHeightColumn, delegate);

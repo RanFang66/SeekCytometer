@@ -44,6 +44,7 @@ void BrowserView::initBrowserView()
     }
     QTreeView::item:selected {
         background-color: #e6f3ff;
+        color: black;
     }
     )");
 

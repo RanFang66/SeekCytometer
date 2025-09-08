@@ -150,7 +150,7 @@ bool UdpCommClient::sendGateData(const Gate &gate)
     }
 }
 
-bool UdpCommClient::sendSpeedMeasureSetting(int preId, int postId, int preThresh, int dist)
+bool UdpCommClient::sendSpeedMeasureSetting(int preId, int postId, int preThresh, int dist, int maxTimeSpan)
 {
     QByteArray data;
     QDataStream stream(&data, QIODevice::WriteOnly);
@@ -158,6 +158,7 @@ bool UdpCommClient::sendSpeedMeasureSetting(int preId, int postId, int preThresh
     stream << (char)(postId & 0x00FF);
     stream << preThresh;
     stream << dist;
+    stream << maxTimeSpan;
     if (!sendFrame(CommCmdType::CMD_SPEED_MEASURE_SETTINGS, data)) {
         return false;
     } else {
@@ -313,7 +314,7 @@ void UdpCommClient::parseEventData(const QByteArray &data)
             sortedNum++;
         }
 
-        timeSpanBuff += eventData.getTimeSpanUs();
+        timeSpanBuff += eventData.getDiffTimeUs();
         eventDataBuffer.append(eventData);
     }
     double timeSpan = (double)timeSpanBuff / eventNum;

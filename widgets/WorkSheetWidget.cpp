@@ -44,6 +44,13 @@ bool WorkSheetWidget::isActive() const
     return m_active;
 }
 
+void WorkSheetWidget::resetPlots()
+{
+    currentWorkSheetScene->resetPlots();
+}
+
+
+
 
 void WorkSheetWidget::addWorkSheetView(int worksheetId)
 {
@@ -145,33 +152,48 @@ void WorkSheetWidget::initDockWidget()
 
 
     QActionGroup *gateGroup = new QActionGroup(this);
+    actionNewIntervalGate = new QAction("New IntervalGate", this);
     actionNewRectGate = new QAction("New RectGate", this);
     actionNewPolyGate = new QAction("New PolyGate", this);
     actionNewEllipseGate = new QAction("New EllipseGate", this);
     actionNewQuadGate = new QAction("New QuadGate", this);
-    actionNewIntervalGate = new QAction("New IntervalGate", this);
+
+    actionNewIntervalGate->setData(QVariant::fromValue(GateType::IntervalGate));
     actionNewRectGate->setData(QVariant::fromValue(GateType::RectangleGate));
     actionNewPolyGate->setData(QVariant::fromValue(GateType::PolygonGate));
     actionNewEllipseGate->setData(QVariant::fromValue(GateType::EllipseGate));
     actionNewQuadGate->setData(QVariant::fromValue(GateType::QuadrantGate));
-    actionNewIntervalGate->setData(QVariant::fromValue(GateType::IntervalGate));
+
+    gateGroup->addAction(actionNewIntervalGate);
     gateGroup->addAction(actionNewRectGate);
     gateGroup->addAction(actionNewPolyGate);
     gateGroup->addAction(actionNewEllipseGate);
     gateGroup->addAction(actionNewQuadGate);
-    gateGroup->addAction(actionNewIntervalGate);
 
+    toolBar->addAction(actionNewIntervalGate);
     toolBar->addAction(actionNewRectGate);
     toolBar->addAction(actionNewPolyGate);
     toolBar->addAction(actionNewEllipseGate);
     toolBar->addAction(actionNewQuadGate);
-    toolBar->addAction(actionNewIntervalGate);
+
     toolBar->addSeparator();
 
 
     tabWidget = new QTabWidget(mainWidget);
 
     tabWidget->setTabsClosable(true);
+    tabWidget->setMinimumHeight(300);
+    connect(tabWidget, &QTabWidget::tabCloseRequested, this, [this](int index){
+        QWidget *tab = tabWidget->widget(index);
+        WorkSheetView *workSheetView = qobject_cast<WorkSheetView*>(tab);
+        if (workSheetView) {
+            m_activedWorksheetId.removeOne(workSheetView->worksheetId());
+        }
+
+        tab->deleteLater();
+        tabWidget->removeTab(index);
+    });
+
 
     QSplitter *splitter = new QSplitter(Qt::Vertical, this);
     splitter->addWidget(tabWidget);

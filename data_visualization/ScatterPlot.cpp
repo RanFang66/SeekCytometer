@@ -83,3 +83,8 @@ void ScatterPlot::paintPlot(QPainter *painter)
     painter->restore();
 }
 
+void ScatterPlot::resetPlot()
+{
+    m_data.clear();
+}
+

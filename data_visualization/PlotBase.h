@@ -18,6 +18,8 @@ public:
     void setAxisXName(const QString &name);
     void setAxisYName(const QString &name);
 
+    virtual void resetPlot() = 0;
+
     int worksheetId() const { return m_plot.workSheetId();}
     int plotId() const {return m_plot.id();}
     QString title() const {return m_title;}

@@ -176,6 +176,9 @@ void WaveformView::addSeriesData(const QList<int> &data)
         if (ch < CHANNEL_START || ch >= CHANNEL_NUM) continue;
 
         int val_raw = (data.at(i) & 0x0003ffff);
+        if(val_raw > 131071) {
+            val_raw =  val_raw-262144;
+        }
         qreal val = m_showVoltage ? val_raw * AD_TO_MV : val_raw;
         if (m_waveBuffer[ch].length() < m_maxWaveLength) {
             m_waveBuffer[ch].append(QPointF(m_bufferIndex[ch], val));

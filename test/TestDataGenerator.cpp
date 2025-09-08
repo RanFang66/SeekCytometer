@@ -70,7 +70,8 @@ void TestDataGenerator::generateEventData()
         m_currentTime += timeSpan;
         timeBuff += distTime;
         event.setPostTimeUs(m_currentTime);
-        event.setPreTimeUs(m_currentTime - distTime);
+        event.setDiffTimeUs(distTime);
+        event.setValidSpeedMeasure(true);
 
 
         for (int ch : EventDataManager::instance().enabledChannels()) {

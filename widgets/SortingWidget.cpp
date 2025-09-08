@@ -3,7 +3,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
-
+#include "WorkSheetWidget.h"
 #include "GatesModel.h"
 #include "CytometerController.h"
 #include "EventDataManager.h"
@@ -23,6 +23,7 @@ void SortingWidget::initSortingWidget()
 
 
     btnRunSorting = new QPushButton(tr("Start Sort"));
+    btnConfirmSetting = new QPushButton(tr("Comfirm Setting"));
     btnPauseSorting = new QPushButton(tr("Pause"));
     editDriveWidth = new QLineEdit("100", this);
     // editDriveStrength = new QLineEdit("5000", this);
@@ -55,6 +56,7 @@ void SortingWidget::initSortingWidget()
     driveLayout->addWidget(editCoolingTime, 1, 1);
     driveLayout->addWidget(new QLabel(tr("Drive Delay"), this), 1, 2);
     driveLayout->addWidget(editDriveDealy, 1, 3);
+    driveLayout->addWidget(btnConfirmSetting, 2, 0, 1, 2);
 
     groupDrive->setLayout(driveLayout);
 
@@ -132,10 +134,12 @@ void SortingWidget::initSortingWidget()
     connect(updateTimer, &QTimer::timeout, this, &SortingWidget::updateDisplay);
 
     connect(btnRunSorting, &QPushButton::clicked, this, &SortingWidget::startSorting);
-    connect(comboDriveMode, &QComboBox::currentIndexChanged, this, &SortingWidget::changeDriveParameters);
-    connect(editCoolingTime, &QLineEdit::editingFinished, this, &SortingWidget::changeDriveParameters);
-    connect(editDriveWidth, &QLineEdit::editingFinished, this, &SortingWidget::changeDriveParameters);
-    connect(editDriveDealy, &QLineEdit::editingFinished, this, &SortingWidget::changeDriveParameters);
+    // connect(comboDriveMode, &QComboBox::currentIndexChanged, this, &SortingWidget::changeDriveParameters);
+    // connect(editCoolingTime, &QLineEdit::editingFinished, this, &SortingWidget::changeDriveParameters);
+    // connect(editDriveWidth, &QLineEdit::editingFinished, this, &SortingWidget::changeDriveParameters);
+    // connect(editDriveDealy, &QLineEdit::editingFinished, this, &SortingWidget::changeDriveParameters);
+
+    connect(btnConfirmSetting, &QPushButton::clicked, this, &SortingWidget::changeDriveParameters);
 
     connect(comboPopulation, &QComboBox::currentIndexChanged, this, &SortingWidget::changeGate);
 
@@ -208,6 +212,7 @@ void SortingWidget::startSorting()
     if (btnRunSorting->text() == tr("Start Sort")) {
         btnRunSorting->setText(tr("Stop Sort"));
         CytometerController::instance()->startSorting();
+        WorkSheetWidget::instance()->resetPlots();
         resetSortingStatus();
         updateTimer->start();
     } else {
