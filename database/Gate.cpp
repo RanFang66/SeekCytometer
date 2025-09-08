@@ -94,6 +94,33 @@ QString Gate::pointsJsonString() const
     return QString::fromUtf8(jsonData);
 }
 
+QString Gate::pointsString() const
+{
+    QString str = "";
+    for (const auto &point :m_points) {
+        str.append(QString("(%1, %2) ").arg(point.x()).arg(point.y()));
+    }
+    return str;
+}
+
+void Gate::getGateRange(int &minX, int &maxX, int &minY, int &maxY) const
+{
+    if (m_points.isEmpty()) {
+        minX = maxX = minY = maxY = 0;
+        return;
+    }
+
+    minX = maxX = m_points.first().x();
+    minY = maxY = m_points.first().y();
+
+    for (const QPoint& point : m_points) {
+        if (point.x() < minX) minX = point.x();
+        if (point.x() > maxX) maxX = point.x();
+        if (point.y() < minY) minY = point.y();
+        if (point.y() > maxY) maxY = point.y();
+    }
+}
+
 
 
 

@@ -46,6 +46,7 @@ public:
     void removeDetectorSettings(int row);
     void updateDetectorSettings(int row, const DetectorSettings &detectorSettings);
 
+    int getSettingId() const;
     const DetectorSettings &getDetectorSettings(int row) const;
     const QList<DetectorSettings> &detectorSettings() const;
 
@@ -55,6 +56,12 @@ private:
                                       "Threshold", "Threshold Value"};
     QList<DetectorSettings> m_settingsList;
     QMutex m_mutex;
+    int m_settingId;
 };
+
+inline int DetectorSettingsModel::getSettingId() const
+{
+    return m_settingId;
+}
 
 #endif // DETECTORSETTINGSMODEL_H

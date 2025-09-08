@@ -22,8 +22,8 @@ public:
     ~CytometerController();
 
 public slots:
-    void connect();
-    void disconnect();
+    void zynqConnect();
+    void zynqDisconnect();
     void startAcquisition();
     void stopAcquisition();
     void startSorting();

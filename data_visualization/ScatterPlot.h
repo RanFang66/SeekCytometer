@@ -19,6 +19,7 @@ public slots:
 
 protected:
     void            paintPlot(QPainter *painter) override;
+    void            resetPlot() override;
 
 private:
     ChartBuffer<QPointF>     m_data;

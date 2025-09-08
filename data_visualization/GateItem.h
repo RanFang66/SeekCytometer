@@ -36,7 +36,7 @@ protected:
     PlotBase    *m_parent;
     bool        m_drawingFinished;
 
-    void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
+    // void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
 };
 
 

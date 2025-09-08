@@ -7,7 +7,11 @@
 
 EventDataManager::EventDataManager(QObject *parent)
     : QObject{parent}
-{}
+{
+    qRegisterMetaType<EventData>("EventData");
+    qRegisterMetaType<QList<EventData>>("QList<EventData>");
+    qRegisterMetaType<QList<EventData>*>("QList<EventData>*");
+}
 
 void EventDataManager::processHistogramData(PlotBase *plot, const QVector<EventData> &data)
 {
@@ -58,6 +62,13 @@ void EventDataManager::saveEventToCsvFile(const QVector<EventData> &updateData)
         for (int i = 0; i < updateData.size(); i++) {
             EventData data = updateData.at(i);
             dataStream << data.getEventId();
+            dataStream << ",";
+
+            dataStream << data.isValidSpeedMeasure();
+            dataStream << ",";
+            dataStream << data.getPostTimeUs();
+            dataStream << ",";
+            dataStream << data.getDiffTimeUs();
             dataStream << ",";
             if (data.isEnabledSort()) {
                 dataStream << "true";
@@ -118,6 +129,12 @@ void EventDataManager::initEventDataManager(const QVector<DetectorSettings> &set
         QTextStream textStream(&dataFile);
         textStream << "Event ID";
         textStream << ",";
+        textStream << "Valid Speed";
+        textStream << ",";
+        textStream << "Start Time(s)";
+        textStream << ",";
+        textStream << QString("Speed (us for %1um)").arg(m_speedMeasureDist);
+        textStream << ",";
         textStream << "Sort Triggered";
         textStream << ",";
         textStream << "Sorted";
@@ -143,14 +160,14 @@ void EventDataManager::addEvent(const EventData &data)
     m_eventData.write(data);
 }
 
-void EventDataManager::addEvents(const QVector<EventData> &data, int enableSortNum, int sortedNum)
+void EventDataManager::addEvents(const QVector<EventData> data, int enableSortNum, int sortedNum, double timeSpan)
 {
     m_processedEvent += data.size();
     m_enableSortEvent += enableSortNum;
     m_sortedEvent += sortedNum;
     m_discardEvent += (enableSortNum - sortedNum);
-
-
+    m_speedMeasureTimeSpan = timeSpan;
+    m_speedMeasured = m_speedMeasureDist / m_speedMeasureTimeSpan;
     m_eventData.writeMultiple(data);
     saveEventToCsvFile(data);
 }

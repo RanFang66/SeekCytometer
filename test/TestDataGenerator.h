@@ -63,7 +63,7 @@ public:
 
 signals:
     void testDataGenerated(const QVector<SampleData> &generatedData);
-    void eventDataGenerated(const QVector<EventData> &eventData, int enableSortNum, int sortedNum);
+    void eventDataGenerated(const QVector<EventData> &eventData, int enableSortNum, int sortedNum, double timeSpan);
 
 private slots:
     void generateTestData();
@@ -76,7 +76,7 @@ private:
     int                     m_dataMin;
     int                     m_dataMax;
     int                     m_eventId;
-
+    int                     m_currentTime;
     QMutex                  m_mutex;
 
     explicit TestDataGenerator(QObject *parent = nullptr);

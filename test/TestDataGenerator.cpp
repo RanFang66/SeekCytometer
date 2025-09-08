@@ -1,6 +1,8 @@
 #include "TestDataGenerator.h"
 #include <QRandomGenerator>
-#include <EventDataManager.h>
+#include "EventDataManager.h"
+#include <QDateTime>
+
 TestDataGenerator::TestDataGenerator(QObject *parent)
     : QObject{parent}, m_generateTimer(new QTimer(this)), m_dataCount(100), m_interval(500), m_dataMin(0), m_dataMax(32768)
 {
@@ -18,6 +20,7 @@ void TestDataGenerator::configTestGenerator(int dataCount, int interval, int dat
     m_interval = interval;
     m_dataMin = dataMin;
     m_dataMax = dataMax;
+    m_currentTime = 0;
 }
 
 
@@ -47,6 +50,8 @@ void TestDataGenerator::generateEventData()
     QVector<EventData> eventData;
     int enableSortNum = 0;
     int sortedNum = 0;
+    int distTime = 0;
+    int timeBuff = 0;
     for (int count = 0; count < m_dataCount; count++) {
         m_eventId++;
         EventData event(EventDataManager::instance().enabledChannels());
@@ -60,6 +65,14 @@ void TestDataGenerator::generateEventData()
                 sortedNum++;
             }
         }
+        int timeSpan = QRandomGenerator::global()->bounded(100, 300);
+        int distTime =  QRandomGenerator::global()->bounded(30, 90);
+        m_currentTime += timeSpan;
+        timeBuff += distTime;
+        event.setPostTimeUs(m_currentTime);
+        event.setDiffTimeUs(distTime);
+        event.setValidSpeedMeasure(true);
+
 
         for (int ch : EventDataManager::instance().enabledChannels()) {
             for (MeasurementType type : MeasurementTypeHelper::measurementTypeList()) {
@@ -69,7 +82,7 @@ void TestDataGenerator::generateEventData()
         eventData.append(event);
     }
 
-    emit eventDataGenerated(eventData, enableSortNum, sortedNum);
+    emit eventDataGenerated(eventData, enableSortNum, sortedNum, (double)timeBuff / m_dataCount);
 }
 
 void TestDataGenerator::stopGenerateData()
@@ -84,6 +97,7 @@ void TestDataGenerator::resetGenerator()
     m_interval = 500;
     m_dataMin = 0;
     m_dataMax = 32768;
+    m_currentTime = 0;
 }
 
 

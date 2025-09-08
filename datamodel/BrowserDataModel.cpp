@@ -58,10 +58,26 @@ QVariant BrowserDataModel::data(const QModelIndex &index, int role) const
     if (!index.isValid() || !m_rootNode)
         return QVariant();
 
+    BrowserData *node = nodeFromIndex(index);
+
+    if (role == IsSelectedRole) {
+        if (node->nodeType() == NodeType::Tube) {
+            return node->nodeId() == m_selectedTubeId;
+        }
+        return false;
+    }
+
+    if (role == IsTubeRole) {
+        return node->nodeType() == NodeType::Tube;
+    }
+
+    if (role == NodeIdRole) {
+        return node->nodeId();
+    }
+
     if (role != Qt::DisplayRole)
         return QVariant();
 
-    BrowserData *node = nodeFromIndex(index);
 
     switch (index.column()) {
     case COLUMN_NAME:
@@ -246,6 +262,33 @@ QList<QModelIndex> BrowserDataModel::getNodePath(const QModelIndex &index)
         currentIndex = currentIndex.parent();
     }
     return path;
+}
+
+void BrowserDataModel::setSelectedTube(int tubeId)
+{
+    if (m_selectedTubeId != tubeId) {
+        int oldTubeId = m_selectedTubeId;
+        m_selectedTubeId = tubeId;
+
+        // 通知视图更新
+        if (oldTubeId != -1) {
+            // 找到旧的选中项目并更新
+            QModelIndex oldIndex = findIndex(NodeType::Tube, QString::number(oldTubeId));
+            if (oldIndex.isValid()) {
+                emit dataChanged(oldIndex, oldIndex, {IsSelectedRole});
+            }
+        }
+
+        if (tubeId != -1) {
+            // 找到新的选中项目并更新
+            QModelIndex newIndex = findIndex(NodeType::Tube, QString::number(tubeId));
+            if (newIndex.isValid()) {
+                emit dataChanged(newIndex, newIndex, {IsSelectedRole});
+            }
+        }
+
+        emit tubeSelectionChanged(tubeId);
+    }
 }
 
 

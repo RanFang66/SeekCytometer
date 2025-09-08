@@ -17,16 +17,16 @@ GateItem::GateItem(const Gate &gate, PlotBase *parent)
 
 }
 
-void GateItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
-{
-    QMenu menu;
-    QAction *deleteAction = menu.addAction(QString("Delete Gate-%1").arg(getGateName()));
-    QAction *selectedAction = menu.exec(event->screenPos());
+// void GateItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
+// {
+//     QMenu menu;
+//     QAction *deleteAction = menu.addAction(QString("Delete Gate-%1").arg(getGateName()));
+//     QAction *selectedAction = menu.exec(event->screenPos());
 
-    if (selectedAction == deleteAction) {
-        emit gateDeleteRequested(this);
-    }
+//     if (selectedAction == deleteAction) {
+//         emit gateDeleteRequested(this);
+//     }
 
-    event->accept();
-}
+//     event->accept();
+// }
 

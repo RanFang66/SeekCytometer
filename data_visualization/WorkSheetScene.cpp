@@ -77,11 +77,18 @@ void WorkSheetScene::addNewGate(GateType gateType, const Gate &gate, PlotBase *p
 {
     GateItem *gateItem = GateItemFactory::createGateItem(gateType, gate, parent);
     qDebug() << "Add New Gate, type: " << Gate::gateTypeToString(gateType)
-             << gate.pointsJsonString();
+             << gate.pointsString();
 
     m_gateItems.append(gateItem);
     // connect(gateItem, &GateItem::gateDeleteRequested, this, &WorkSheetScene::onDeleteGate);
     update();
+}
+
+void WorkSheetScene::resetPlots()
+{
+    for (PlotBase *plot : m_plots) {
+        plot->resetPlot();
+    }
 }
 
 

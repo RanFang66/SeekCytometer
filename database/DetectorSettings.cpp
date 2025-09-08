@@ -1,8 +1,8 @@
 #include "DetectorSettings.h"
 
 DetectorSettings::DetectorSettings()
-:m_id(0), m_settingId(0), m_detectorId{0}, m_parameterName{""}, m_detectorGain{100}, m_detectorOffset{0}, m_enableThreshold{false}, m_thresholdValue{0},
-m_enableHeight{true}, m_enableWidth{false}, m_enableArea{false}
+:m_id(0), m_settingId(0), m_detectorId{0}, m_parameterName{""}, m_detectorGain{100}, m_detectorOffset{0}, m_enableThreshold{true}, m_thresholdValue{0},
+m_enableHeight{true}, m_enableWidth{true}, m_enableArea{true}
 {
 }
 
@@ -17,7 +17,7 @@ m_enableHeight{enableHeight}, m_enableWidth{enableWidth}, m_enableArea{enableAre
 
 DetectorSettings::DetectorSettings(int settingId, const Detector &detector)
 :m_id(0), m_settingId(settingId), m_detectorId{detector.id()}, m_parameterName{detector.name()}, m_detectorGain{detector.defaultGain()}, m_detectorOffset{detector.defaultOffset()},
-m_enableThreshold{false}, m_thresholdValue{1000}, m_enableHeight{false}, m_enableWidth{false}, m_enableArea{false}
+m_enableThreshold{true}, m_thresholdValue{3000}, m_enableHeight{true}, m_enableWidth{true}, m_enableArea{true}
 {
 
 }

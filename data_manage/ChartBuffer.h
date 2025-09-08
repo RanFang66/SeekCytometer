@@ -48,7 +48,7 @@ public:
     {
         QMutexLocker locker(&m_mutex);
         QVector<T> result;
-        if (count <= 0) return result;
+        if (count <= 0 || m_size == 0) return result;
         if (count > m_size) {
             count = m_size;
         }
@@ -65,6 +65,9 @@ public:
     {
         QMutexLocker locker(&m_mutex);
         QVector<T> result;
+        if (m_size == 0) {
+            return result;
+        }
         result.reserve(m_size);
         if (m_size < m_capacity) {
             result = m_buffer.mid(0, m_size);
@@ -91,6 +94,13 @@ public:
     {
         QMutexLocker locker(&m_mutex);
         return m_size;
+    }
+
+    void clear()
+    {
+        QMutexLocker locker(&m_mutex);
+        m_size = 0;
+        m_writeIndex = 0;
     }
 
 private:

@@ -4,6 +4,7 @@
 #include <QGraphicsObject>
 #include "CustomAxis.h"
 #include "Plot.h"
+#include "Gate.h"
 
 class PlotBase : public QGraphicsObject
 {
@@ -16,6 +17,8 @@ public:
     void setTitleFont(const QFont &font);
     void setAxisXName(const QString &name);
     void setAxisYName(const QString &name);
+
+    virtual void resetPlot() = 0;
 
     int worksheetId() const { return m_plot.workSheetId();}
     int plotId() const {return m_plot.id();}
@@ -46,6 +49,11 @@ public:
     bool    isInPlotArea(const QPointF &point) const;
     QPointF limitPointInPlot(const QPointF &point) const;
     QPointF limitScenePointInPlot(const QPointF &point) const;
+
+
+    void updateAxisRange(int xMin, int xMax, int yMin, int yMax);
+
+    void updateAxisRanges(const Gate &gate);
 
 signals:
     void deleteRequested(PlotBase *plot);

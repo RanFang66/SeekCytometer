@@ -3,7 +3,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
-
+#include "WorkSheetWidget.h"
 #include "GatesModel.h"
 #include "CytometerController.h"
 #include "EventDataManager.h"
@@ -23,6 +23,7 @@ void SortingWidget::initSortingWidget()
 
 
     btnRunSorting = new QPushButton(tr("Start Sort"));
+    btnConfirmSetting = new QPushButton(tr("Comfirm Setting"));
     btnPauseSorting = new QPushButton(tr("Pause"));
     editDriveWidth = new QLineEdit("100", this);
     // editDriveStrength = new QLineEdit("5000", this);
@@ -55,6 +56,7 @@ void SortingWidget::initSortingWidget()
     driveLayout->addWidget(editCoolingTime, 1, 1);
     driveLayout->addWidget(new QLabel(tr("Drive Delay"), this), 1, 2);
     driveLayout->addWidget(editDriveDealy, 1, 3);
+    driveLayout->addWidget(btnConfirmSetting, 2, 0, 1, 2);
 
     groupDrive->setLayout(driveLayout);
 
@@ -79,6 +81,7 @@ void SortingWidget::initSortingWidget()
     lblSortRatio = new QLabel("0.00%", this);
     lblDiscardRatio = new QLabel("0.00%", this);
     lblSortTime = new QLabel("0 s", this);
+    lblCellSpeed = new QLabel("0 m/s", this);
     // progressSort = new QProgressBar(this);
 
 
@@ -106,6 +109,8 @@ void SortingWidget::initSortingWidget()
     statusLayout->addWidget(new QLabel(tr("Discard Ratio"), this), 3, 2);
     statusLayout->addWidget(lblDiscardRatio, 3, 3);
 
+    statusLayout->addWidget(new QLabel(tr("Cell Speed"), this), 4, 0);
+    statusLayout->addWidget(lblCellSpeed, 4, 1);
 
     // statusLayout->addWidget(new QLabel(tr("Sort Efficiency"), this), 3, 0);
     // statusLayout->addWidget(lblSortEfficiency, 3, 1);
@@ -116,9 +121,9 @@ void SortingWidget::initSortingWidget()
 
 
     QVBoxLayout *mainLayout = new QVBoxLayout(mainWidget);
-    mainLayout->addWidget(groupDrive);
-    mainLayout->addWidget(groupSetup);
-    mainLayout->addWidget(groupStatus);
+    mainLayout->addWidget(groupDrive, 1);
+    mainLayout->addWidget(groupSetup, 1);
+    mainLayout->addWidget(groupStatus, 2);
     mainWidget->setLayout(mainLayout);
 
     setWidget(mainWidget);
@@ -129,10 +134,12 @@ void SortingWidget::initSortingWidget()
     connect(updateTimer, &QTimer::timeout, this, &SortingWidget::updateDisplay);
 
     connect(btnRunSorting, &QPushButton::clicked, this, &SortingWidget::startSorting);
-    connect(comboDriveMode, &QComboBox::currentIndexChanged, this, &SortingWidget::changeDriveParameters);
-    connect(editCoolingTime, &QLineEdit::editingFinished, this, &SortingWidget::changeDriveParameters);
-    connect(editDriveWidth, &QLineEdit::editingFinished, this, &SortingWidget::changeDriveParameters);
-    connect(editDriveDealy, &QLineEdit::editingFinished, this, &SortingWidget::changeDriveParameters);
+    // connect(comboDriveMode, &QComboBox::currentIndexChanged, this, &SortingWidget::changeDriveParameters);
+    // connect(editCoolingTime, &QLineEdit::editingFinished, this, &SortingWidget::changeDriveParameters);
+    // connect(editDriveWidth, &QLineEdit::editingFinished, this, &SortingWidget::changeDriveParameters);
+    // connect(editDriveDealy, &QLineEdit::editingFinished, this, &SortingWidget::changeDriveParameters);
+
+    connect(btnConfirmSetting, &QPushButton::clicked, this, &SortingWidget::changeDriveParameters);
 
     connect(comboPopulation, &QComboBox::currentIndexChanged, this, &SortingWidget::changeGate);
 
@@ -150,6 +157,7 @@ void SortingWidget::resetSortingStatus()
     lblSortRate->setText("0 /s");
     lblSortRatio->setText("0.00%");
     lblDiscardRatio->setText("0.00%");
+    lblCellSpeed->setText("0 m/s");
 }
 
 SortingWidget::~SortingWidget()
@@ -204,6 +212,7 @@ void SortingWidget::startSorting()
     if (btnRunSorting->text() == tr("Start Sort")) {
         btnRunSorting->setText(tr("Stop Sort"));
         CytometerController::instance()->startSorting();
+        WorkSheetWidget::instance()->resetPlots();
         resetSortingStatus();
         updateTimer->start();
     } else {
@@ -226,7 +235,7 @@ void SortingWidget::updateDisplay()
 
     double sortRatio = (eventsNum > 0) ? (static_cast<double>(sortNum) / eventsNum * 100.0) : 0;
     double discardRatio = (eventsNum > 0) ? (static_cast<double>(discardNum) / eventsNum * 100.0) : 0;
-
+    double speed = dataManager.speedMeasured();
 
     lblSortTime->setText(QString("%1 s").arg(m_sortTime));
     lblEventsNum->setText(QString::number(eventsNum));
@@ -236,6 +245,7 @@ void SortingWidget::updateDisplay()
     lblSortRate->setText(QString::asprintf("%.1f / s", sortRate));
     lblSortRatio->setText(QString::asprintf("%.2f %%", sortRatio));
     lblDiscardRatio->setText(QString::asprintf("%.2f %%", discardRatio));
+    lblCellSpeed->setText(QString::asprintf("%.2f m/s", speed));
 }
 
 

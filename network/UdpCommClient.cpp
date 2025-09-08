@@ -8,6 +8,9 @@ UdpCommClient::UdpCommClient(QObject *parent)
     m_sequenceCounter(0), m_sequenceValLast(0), m_sequenceReceived(0), m_sequenceReceivedLast(0),
     m_timerInterval(2000), m_commLostCounter(0), m_connected(false)
 {
+    qRegisterMetaType<EventData>("EventData");
+    qRegisterMetaType<QList<EventData>>("QList<EventData>");
+    qRegisterMetaType<QList<EventData>*>("QList<EventData>*");
     connect(m_udpSocket, &QUdpSocket::readyRead, this, &UdpCommClient::onReadyRead);
 
     m_handshakeTimer = new QTimer();
@@ -147,6 +150,23 @@ bool UdpCommClient::sendGateData(const Gate &gate)
     }
 }
 
+bool UdpCommClient::sendSpeedMeasureSetting(int preId, int postId, int preThresh, int dist, int maxTimeSpan)
+{
+    QByteArray data;
+    QDataStream stream(&data, QIODevice::WriteOnly);
+    stream << (char)(preId & 0x00FF);
+    stream << (char)(postId & 0x00FF);
+    stream << preThresh;
+    stream << dist;
+    stream << maxTimeSpan;
+    if (!sendFrame(CommCmdType::CMD_SPEED_MEASURE_SETTINGS, data)) {
+        return false;
+    } else {
+        qDebug() << "[UdpCommClient] Sent speed measure settings to remote.";
+        return true;
+    }
+}
+
 bool UdpCommClient::sendDriveParameters(int type, int delay, int width, int coolingTime)
 {
     QByteArray data;
@@ -261,16 +281,28 @@ void UdpCommClient::parseHandshakeFrame(const QByteArray &data)
 }
 
 
+
+/*
+ * Event Frame: {Head Magic(0x55AA55AA) | Event Id with Sort State | Pre Time | Post Time
+ * | (Peak | Width | Area) * (Enable Channel Num) | Tail Magic(0xAA55AA55)}
+*/
 void UdpCommClient::parseEventData(const QByteArray &data)
 {
     int channelSize = EventDataManager::instance().enabledChannels().size();
-    int eventSize = channelSize * 3 + 1 + 1;
+    int eventSize = channelSize * 3 + 5;
     int eventByteSize = eventSize * 4;
     int eventNum = data.size() / eventByteSize;
+
+    if (eventNum < 1) {
+        qWarning() << QString("Received Event Data Frame is too short, expected atleast %d bytes, but %d byte actually").arg(eventByteSize).arg(data.size());
+        return;
+    }
+
 
     QVector<EventData> eventDataBuffer;
     int enableSortNum = 0;
     int sortedNum = 0;
+    int timeSpanBuff = 0;
 
 
     for (int i = 0; i < eventNum; i++) {
@@ -281,8 +313,12 @@ void UdpCommClient::parseEventData(const QByteArray &data)
         if (eventData.isRealSorted()) {
             sortedNum++;
         }
+
+        timeSpanBuff += eventData.getDiffTimeUs();
         eventDataBuffer.append(eventData);
     }
+    double timeSpan = (double)timeSpanBuff / eventNum;
+
     qDebug() << "Received " << eventNum << " Events Data";
     // QDataStream stream(data);
 
@@ -291,7 +327,7 @@ void UdpCommClient::parseEventData(const QByteArray &data)
     //     eventDataBuffer.append(eventData);
     // }
 
-    emit eventDataReady(eventDataBuffer, enableSortNum, sortedNum);
+    emit eventDataReady(eventDataBuffer, enableSortNum, sortedNum, timeSpan);
 }
 
 void UdpCommClient::parseSampleData(const QByteArray &data)

@@ -61,7 +61,7 @@ void LoginDialog::initLoginDialog()
     formLayout->addRow(btnConfirm, btnCancel);
     setLayout(formLayout);
     setAttribute(Qt::WA_DeleteOnClose);
-    setWindowFlags(Qt::SplashScreen);
+    setWindowFlags(windowFlags() | Qt::Window | Qt::WindowTitleHint | Qt::WindowCloseButtonHint);
 
     readSettings();
 

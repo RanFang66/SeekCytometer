@@ -25,6 +25,8 @@ public:
     void setActive(bool active, int interval);
     bool isActive() const;
 
+    void resetPlots();
+
 public slots:
     void addWorkSheetView(int worksheetId);
     void onFinishedDrawingGate(GateItem *gateItem);

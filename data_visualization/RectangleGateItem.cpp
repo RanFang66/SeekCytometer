@@ -14,6 +14,7 @@ RectangleGateItem::RectangleGateItem(const Gate &gate, PlotBase *parent)
     QPointF p2 = m_parent->mapPointToPlotArea(gate.points().at(1));
 
     m_rectangle = QRectF(p1, p2);
+    setFlags(ItemIsMovable | ItemIsSelectable);
 }
 
 void RectangleGateItem::updateGatePreview(const QPointF &point)

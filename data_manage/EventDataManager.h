@@ -25,15 +25,17 @@ public:
 
     void initEventDataManager(const QVector<DetectorSettings> &settings);
     const QVector<int> &enabledChannels() const;
+    void setSpeedMeasureDist(int dist);
     int sortedEventNum() const;
     int enableSortedEventNum() const;
     int processedEventNum() const;
     int discardedEventNum() const;
+    double speedMeasured() const;
 
 
 public slots:
     void addEvent(const EventData &data);
-    void addEvents(const QVector<EventData> &data, int enableSortNum, int sortedNum);
+    void addEvents(const QVector<EventData> data, int enableSortNum, int sortedNum, double timeSpan);
     const QVector<EventData> &getEventData();
 
     void processData(const QVector<PlotBase*> &plots);
@@ -59,6 +61,9 @@ private:
     int             m_enableSortEvent;
     int             m_sortedEvent;
     int             m_discardEvent;
+    int             m_speedMeasureDist;
+    double          m_speedMeasureTimeSpan;
+    double          m_speedMeasured;
 
 
     QVector<int>                        m_enabledChannels;
@@ -68,6 +73,11 @@ private:
 inline const QVector<int> &EventDataManager::enabledChannels() const
 {
     return m_enabledChannels;
+}
+
+inline void EventDataManager::setSpeedMeasureDist(int dist)
+{
+    m_speedMeasureDist = dist;
 }
 
 inline int EventDataManager::sortedEventNum() const
@@ -88,6 +98,11 @@ inline int EventDataManager::processedEventNum() const
 inline int EventDataManager::discardedEventNum() const
 {
     return m_discardEvent;
+}
+
+inline double EventDataManager::speedMeasured() const
+{
+    return m_speedMeasured;
 }
 
 

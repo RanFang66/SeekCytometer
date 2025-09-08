@@ -67,6 +67,7 @@ private:
 
     QPushButton *btnRunSorting;
     QPushButton *btnPauseSorting;
+    QPushButton *btnConfirmSetting;
     QLineEdit   *editDriveWidth;
     QLineEdit   *editDriveStrength;
     QLineEdit   *editCoolingTime;
@@ -85,6 +86,7 @@ private:
     QLabel          *lblProcessRate;
     QLabel          *lblSortRate;
     QLabel          *lblSortRatio;
+    QLabel          *lblCellSpeed;
     QLabel          *lblDiscardRatio;
 
 

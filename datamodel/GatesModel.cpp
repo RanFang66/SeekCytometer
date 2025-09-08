@@ -43,7 +43,7 @@ QVariant GatesModel::data(const QModelIndex &index, int role) const
         case GateColumn::YAxisColumn:
             return gate.yAxisName();
         case GateColumn::GatePointsColumn:
-            return gate.pointsJsonString();
+            return gate.pointsString();
             break;
         default:
             return QVariant();

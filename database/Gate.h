@@ -36,6 +36,12 @@ public:
     const QList<QPoint> &points() const;
     QJsonArray pointsJsonArray() const;
     QString     pointsJsonString() const;
+    QString     pointsString() const;
+
+
+    void getGateRange(int& minX, int& maxX, int& minY, int& maxY) const;
+
+
     int xAxisSettingId() const;
     int yAxisSettingId() const;
 

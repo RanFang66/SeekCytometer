@@ -264,6 +264,37 @@ QPointF PlotBase::limitScenePointInPlot(const QPointF &pointInScene) const
     return mapToScene(limitedPoint);
 }
 
+void PlotBase::updateAxisRange(int xMin, int xMax, int yMin, int yMax)
+{
+    int xMinVal = m_xAxis->minValue() > xMin ? xMin : m_xAxis->minValue();
+    int xMaxVal = m_xAxis->maxValue() < xMax ? xMax : m_xAxis->maxValue();
+    int yMinVal = m_yAxis->minValue() > yMin ? yMin : m_yAxis->minValue();
+    int yMaxVal = m_yAxis->maxValue() < yMax ? yMax : m_yAxis->maxValue();
+
+    m_xAxis->setRange(xMinVal, xMaxVal);
+    m_yAxis->setRange(yMinVal, yMaxVal);
+}
+
+void PlotBase::updateAxisRanges(const Gate &gate)
+{
+    QList<QPoint> points = gate.points();
+
+    int minX = m_xAxis->minValue();
+    int maxX = m_xAxis->maxValue();
+    int minY = m_yAxis->minValue();
+    int maxY = m_yAxis->maxValue();
+
+
+    for (const QPoint& point : points) {
+        if (point.x() < minX) minX = point.x();
+        if (point.x() > maxX) maxX = point.x();
+        if (point.y() < minY) minY = point.y();
+        if (point.y() > maxY) maxY = point.y();
+    }
+    m_xAxis->setRange(minX, maxX);
+    m_yAxis->setRange(minY, maxY);
+}
+
 
 QRectF PlotBase::boundingRect() const
 {

@@ -6,6 +6,7 @@
 #include "CytometerSettings.h"
 #include "CytometerGeneralInfo.h"
 #include "DetectorSettingsWidget.h"
+#include "SpeedMeasureWidget.h"
 
 class CytometerSettingsWidget : public QDockWidget
 {
@@ -26,6 +27,7 @@ private:
     CytometerSettings       m_cytometerSettings;
     DetectorSettingsWidget  *m_detectorSettingsWidget;
     CytometerGeneralInfo    *m_generalInfoWidget;
+    SpeedMeasureWidget      *m_speedMeasureWidget;
 };
 
 #endif // CYTOMETERSETTINGSWIDGET_H

@@ -19,6 +19,7 @@ public slots:
 
 protected:
     void            paintPlot(QPainter *painter) override;
+    void            resetPlot() override;
 
 private:
     static constexpr int DEFAULT_DATA_LENGTH = 60000;
