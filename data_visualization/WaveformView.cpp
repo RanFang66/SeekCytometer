@@ -175,10 +175,7 @@ void WaveformView::addSeriesData(const QList<int> &data)
         int ch = data.at(i)  >> 24;
         if (ch < CHANNEL_START || ch >= CHANNEL_NUM) continue;
 
-        int val_raw = (data.at(i) & 0x0003ffff);
-        if(val_raw > 131071) {
-            val_raw =  val_raw-262144;
-        }
+        int val_raw = ((data.at(i) << 14) >> 14);   // Expand signed bit
         qreal val = m_showVoltage ? val_raw * AD_TO_MV : val_raw;
         if (m_waveBuffer[ch].length() < m_maxWaveLength) {
             m_waveBuffer[ch].append(QPointF(m_bufferIndex[ch], val));

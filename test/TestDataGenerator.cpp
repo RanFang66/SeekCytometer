@@ -3,6 +3,49 @@
 #include "EventDataManager.h"
 #include <QDateTime>
 
+#include <random>
+#include <algorithm>
+
+// 生成一个高斯分布整数 + 噪声，并裁剪在指定范围 [minValue, maxValue]
+int generateGaussianWithNoise(double mean,
+                              double stddev,
+                              int noiseMin,
+                              int noiseMax,
+                              int minValue,
+                              int maxValue)
+{
+    // ------------------------
+    // 1. 正态分布随机数生成器
+    // ------------------------
+    static std::random_device rd;
+    static std::mt19937 rng(rd());
+    std::normal_distribution<double> dist(mean, stddev);
+
+    // 生成高斯数
+    double gaussianValue = dist(rng);
+
+    // ------------------------
+    // 2. 均匀噪声
+    // ------------------------
+    std::uniform_int_distribution<int> noiseDist(noiseMin, noiseMax - 1);
+    int noise = noiseDist(rng);
+
+    // ------------------------
+    // 3. 合成 + 取整
+    // ------------------------
+    int result = static_cast<int>(gaussianValue + noise);
+
+    // ------------------------
+    // 4. 裁剪到范围 [minValue, maxValue]
+    // ------------------------
+    result = std::clamp(result, minValue, maxValue);
+
+    return result;
+}
+
+
+
+
 TestDataGenerator::TestDataGenerator(QObject *parent)
     : QObject{parent}, m_generateTimer(new QTimer(this)), m_dataCount(100), m_interval(500), m_dataMin(0), m_dataMax(32768)
 {
@@ -45,6 +88,7 @@ void TestDataGenerator::generateTestData()
     emit testDataGenerated(generatedData);
 }
 
+
 void TestDataGenerator::generateEventData()
 {
     QVector<EventData> eventData;
@@ -73,10 +117,12 @@ void TestDataGenerator::generateEventData()
         event.setDiffTimeUs(distTime);
         event.setValidSpeedMeasure(true);
 
-
+        double mean = (m_dataMax  + m_dataMin)  / 2;
+        double stddev = (m_dataMax - m_dataMin) / 6;
+        int noiseLimit = mean / 10;
         for (int ch : EventDataManager::instance().enabledChannels()) {
             for (MeasurementType type : MeasurementTypeHelper::measurementTypeList()) {
-                event.setData(ch, type, QRandomGenerator::global()->bounded(m_dataMin, m_dataMax));
+                event.setData(ch, type, generateGaussianWithNoise(mean, stddev, -noiseLimit, noiseLimit, m_dataMin, m_dataMax));
             }
         }
         eventData.append(event);

@@ -303,10 +303,14 @@ void UdpCommClient::parseEventData(const QByteArray &data)
     int enableSortNum = 0;
     int sortedNum = 0;
     int timeSpanBuff = 0;
-
+    int validEventNum = 0;
 
     for (int i = 0; i < eventNum; i++) {
         EventData eventData(EventDataManager::instance().enabledChannels(), data.mid(i * eventByteSize, eventByteSize));
+        if (!eventData.isValidEvent()) {
+            continue;
+        }
+        validEventNum++;
         if (eventData.isEnabledSort()) {
             enableSortNum++;
         }
@@ -317,9 +321,12 @@ void UdpCommClient::parseEventData(const QByteArray &data)
         timeSpanBuff += eventData.getDiffTimeUs();
         eventDataBuffer.append(eventData);
     }
-    double timeSpan = (double)timeSpanBuff / eventNum;
+    double timeSpan = (double)timeSpanBuff / validEventNum;
 
-    qDebug() << "Received " << eventNum << " Events Data";
+    if (eventNum != validEventNum) {
+        qDebug() << "Received " << eventNum << " Events Data" << validEventNum << "Valid";
+    }
+
     // QDataStream stream(data);
 
     // while (!stream.atEnd()) {

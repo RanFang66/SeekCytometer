@@ -118,7 +118,7 @@ void PlotBase::paintAxis(QPainter *painter)
         double val = m_xAxis->minValue() + i * xTickInterval;
         qreal posX = m_plotArea.left() + (val - m_xAxis->minValue()) * xRatio;
         painter->drawLine(QPointF(posX, m_axisXArea.top()), QPointF(posX, m_axisXArea.top() + 8));
-        painter->drawText(QRectF(posX - 20, m_axisXArea.top() + 8, 40, 20), Qt::AlignCenter, QString::number((int)val));
+        painter->drawText(QRectF(posX - 25, m_axisXArea.top() + 8, 50, 20), Qt::AlignCenter, QString::number((int)val));
     }
 
     // Draw X Axis Title Under the Axis
@@ -135,7 +135,7 @@ void PlotBase::paintAxis(QPainter *painter)
         double val = m_yAxis->minValue() + i * yTickInterval;
         qreal posY = m_plotArea.bottom() - (val - m_yAxis->minValue()) * yRatio;
         painter->drawLine(QPointF(m_axisYArea.right(), posY), QPointF(m_axisYArea.right() - 8, posY));
-        painter->drawText(QRectF(m_axisYArea.right() - 50, posY - 15, 50, 20), Qt::AlignCenter, QString::number((int)val));
+        painter->drawText(QRectF(m_axisYArea.right() - 60, posY - 15, 60, 20), Qt::AlignCenter, QString::number((int)val));
     }
 
     // Draw Y Axis Title At the Left of the Axis in Vertical Direction

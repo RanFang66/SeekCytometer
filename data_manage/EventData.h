@@ -20,6 +20,8 @@ public:
     bool isEnabledSort() const;
     bool isRealSorted() const;
     bool isValidSpeedMeasure() const;
+
+    bool isValidEvent() const;
     int getEventId() const;
     quint32 getDiffTimeUs() const;
     quint32 getPostTimeUs() const;
@@ -41,6 +43,7 @@ private:
     bool                    enableSorted;
     bool                    isSorted;
     bool                    isValidMeasure;
+    bool                    isValidData;
     QVector<int>            enabledChannels;
     QVector<QVector<int>>   data;
 };
@@ -134,6 +137,11 @@ inline void EventData::setDiffTimeUs(quint32 time)
 inline void EventData::setPostTimeUs(quint32 time)
 {
     postTimeUs = time;
+}
+
+inline bool EventData::isValidEvent() const
+{
+    return isValidData;
 }
 
 

@@ -15,6 +15,7 @@ EventData::EventData(const QVector<int> &channels)
     enableSorted = false;
     isSorted = false;
     isValidMeasure = false;
+    isValidData = false;
     diffTimeUs = 0;
     postTimeUs = 0;
     enabledChannels = channels;
@@ -49,6 +50,9 @@ EventData::EventData(const QVector<int> &channels, const QByteArray &bytes)
 
     if (headMagicWord != HEAD_MAGIC || tailMagicWord != TAIL_MAGIC) {
         qWarning() << "Head or Tail magic word does not match!";
+        isValidData = false;
+    } else {
+        isValidData = true;
     }
 }
 
@@ -75,6 +79,9 @@ EventData::EventData(const QVector<int> &channels, QDataStream &stream)
     stream >> tailMagicWord;
     if (headMagicWord != HEAD_MAGIC || tailMagicWord != TAIL_MAGIC) {
         qWarning() << "Head or Tail magic word does not match!";
+        isValidData = false;
+    } else {
+        isValidData = true;
     }
 }
 

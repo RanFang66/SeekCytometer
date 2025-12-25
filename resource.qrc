@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
+        <file>seekgene.ico</file>
         <file>resource/images/seekgene_logo.jpg</file>
     </qresource>
 </RCC>

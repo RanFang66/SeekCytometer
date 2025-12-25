@@ -10,9 +10,14 @@
 #include "SortingWidget.h"
 #include "WaveformWidget.h"
 
+#include "SampleChipWidget.h"
+#include "OpticsControlWidget.h"
+#include "MicroFluidicWidget.h"
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
+    setWindowIcon(QIcon(":/seekgene.ico"));
     initStatusBar();
     initMenuBar();
     setupToolBar();
@@ -107,7 +112,18 @@ void MainWindow::initDockWidgets()
     splitDockWidget(cytometerSettingsWidget, acquisitionWidget, Qt::Vertical);
 
     tabifyDockWidget(acquisitionWidget, SortingWidget::instance());
-    acquisitionWidget->raise();
+
+
+    // SampleChipWidget *sampleChipWidget = new SampleChipWidget("Chip Control", this);
+    // tabifyDockWidget(SortingWidget::instance(), sampleChipWidget);
+
+    // OpticsControlWidget *opticsControlWidget = new OpticsControlWidget("Optics Control", this);
+    // tabifyDockWidget(sampleChipWidget, opticsControlWidget);
+
+    // MicroFluidicWidget *microFluidicWidget = new MicroFluidicWidget("MicroFluidic Control", this);
+    // tabifyDockWidget(opticsControlWidget, microFluidicWidget);
+
+    // acquisitionWidget->raise();
 
     connect(experimentsBrowser, &ExperimentsBrowser::worksheetSelected, WorkSheetWidget::instance(), &WorkSheetWidget::addWorkSheetView);
     connect(experimentsBrowser, &ExperimentsBrowser::settingsSelected, cytometerSettingsWidget, &CytometerSettingsWidget::onCytometerSettingsChanged);

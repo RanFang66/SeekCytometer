@@ -18,7 +18,7 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools Sql
 
 
 
-# Only enable debug in DEBUG BUILD
+# # Only enable debug in DEBUG BUILD
 # if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 #     target_compile_definitions(my_app
 #         PRIVATE
@@ -39,6 +39,10 @@ set(PROJECT_SOURCES
 include_directories(. network datamodel database widgets dialogs delegate data_visualization data_manage test)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core)
+
     qt_add_executable(SeekCytometer
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
@@ -72,7 +76,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         dialogs/AddNewDetectorDialog.h dialogs/AddNewDetectorDialog.cpp
         delegate/CheckBoxDelegate.h delegate/CheckBoxDelegate.cpp
         dialogs/LoginDialog.h dialogs/LoginDialog.cpp
-        resource.qrc
+
         widgets/CustomStatusBar.cpp widgets/CustomStatusBar.h
         widgets/StatusIndicator.cpp widgets/StatusIndicator.h
         network/NetworkClient.cpp network/NetworkClient.h network/NetworkFrame.cpp network/NetworkFrame.h
@@ -123,6 +127,11 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         widgets/BrowserView.h widgets/BrowserView.cpp
         datamodel/TubeSelectModel.h datamodel/TubeSelectModel.cpp
         widgets/SpeedMeasureWidget.h widgets/SpeedMeasureWidget.cpp
+        widgets/SampleChipWidget.h widgets/SampleChipWidget.cpp
+        widgets/MicroFluidicWidget.h widgets/MicroFluidicWidget.cpp
+        widgets/OpticsControlWidget.h widgets/OpticsControlWidget.cpp
+        resource.qrc
+        app_icon.rc
 
     )
 # Define target properties for Android with Qt 6 as:
@@ -148,6 +157,9 @@ else()
 endif()
 
 target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Sql Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Charts Qt${QT_VERSION_MAJOR}::StateMachine)
+target_link_libraries(SeekCytometer PRIVATE Qt6::Core)
+target_link_libraries(SeekCytometer PRIVATE Qt6::Core)
+target_link_libraries(SeekCytometer PRIVATE Qt6::Core)
 
 # FOR DEBUG
 target_compile_definitions(SeekCytometer PRIVATE ENABLE_DEBUG=0)
