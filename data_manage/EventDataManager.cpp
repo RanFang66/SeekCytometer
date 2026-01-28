@@ -22,7 +22,7 @@ void EventDataManager::processHistogramData(PlotBase *plot, const QVector<EventD
     MeasurementType xType = histogramPlot->xMeasurementType();
 
 
-    QVector<double> histogram(data.size(), 0);
+    QVector<int> histogram(data.size(), 0);
     for (int i = 0; i < data.size(); ++i) {
         histogram[i] = data.at(i).getData(channelX, xType);
     }
@@ -40,9 +40,9 @@ void EventDataManager::processScatterData(PlotBase *plot, const QVector<EventDat
     MeasurementType yType = scatterPlot->yMeasurementType();
 
 
-    QVector<QPointF> scatterData(data.size());
+    QVector<QPoint> scatterData(data.size());
     for (int i = 0; i < data.size(); ++i) {
-        scatterData[i] = QPointF(data.at(i).getData(channelX, xType),
+        scatterData[i] = QPoint(data.at(i).getData(channelX, xType),
                                  data.at(i).getData(channelY, yType));
     }
     scatterPlot->updateData(scatterData);
@@ -54,48 +54,31 @@ void EventDataManager::processContourData(PlotBase *plot, const QVector<EventDat
 
 }
 
+
+
 void EventDataManager::saveEventToCsvFile(const QVector<EventData> &updateData)
 {
     QFile dataFile(m_dataSavePath);
-    if (dataFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODeviceBase::Append)) {
-        QTextStream dataStream(&dataFile);
-        for (int i = 0; i < updateData.size(); i++) {
-            EventData data = updateData.at(i);
-            dataStream << data.getEventId();
-            dataStream << ",";
-
-            dataStream << data.isValidSpeedMeasure();
-            dataStream << ",";
-            dataStream << data.getPostTimeUs();
-            dataStream << ",";
-            dataStream << data.getDiffTimeUs();
-            dataStream << ",";
-            if (data.isEnabledSort()) {
-                dataStream << "true";
-            } else {
-                dataStream << "false";
-            }
-            dataStream << ",";
-
-            if (data.isRealSorted()) {
-                dataStream << "true";
-            } else {
-                dataStream << "false";
-            }
-            dataStream << ",";
-
-            for (int ch : m_enabledChannels) {
-                for (MeasurementType type : MeasurementTypeHelper::measurementTypeList()) {
-                    dataStream << data.getData(ch, type);
-                    dataStream << ",";
-                }
-            }
-
-            dataStream << "\n";
-        }
-        dataFile.close();
-    } else {
+    if (!dataFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
         qDebug() << "Save Failed! Error: data file open failed!";
+        return;
+    }
+
+    QTextStream dataStream(&dataFile);
+    for (const EventData &data : updateData) {
+        dataStream << data.getEventId() << ",";
+        dataStream << data.isValidSpeedMeasure() << ',';
+        dataStream << data.getPostTimeUs() << ",";
+        dataStream << data.getDiffTimeUs() << ",";
+        dataStream << (data.isEnabledSort() ? "true" : "false") << ",";
+        dataStream << (data.isRealSorted() ? "true" : "false") << ",";
+        for (int ch : data.getEnabledChannels()) {
+            for (MeasurementType type : MeasurementTypeHelper::measurementTypeList()) {
+                dataStream << data.getData(ch, type) << ",";
+            }
+        }
+
+        dataStream << "\n";
     }
 }
 

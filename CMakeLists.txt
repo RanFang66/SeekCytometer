@@ -13,6 +13,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools Sql)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools Sql Network Charts StateMachine)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 
 
 
@@ -79,7 +84,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
 
         widgets/CustomStatusBar.cpp widgets/CustomStatusBar.h
         widgets/StatusIndicator.cpp widgets/StatusIndicator.h
-        network/NetworkClient.cpp network/NetworkClient.h network/NetworkFrame.cpp network/NetworkFrame.h
+
         widgets/MenuBarManager.h widgets/MenuBarManager.cpp
         database/NodeTypeHelper.h database/NodeTypeHelper.cpp
         widgets/DataAcquisitionWidget.h widgets/DataAcquisitionWidget.cpp
@@ -132,6 +137,12 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         widgets/OpticsControlWidget.h widgets/OpticsControlWidget.cpp
         resource.qrc
         app_icon.rc
+        data_manage/Logger.h data_manage/Logger.cpp
+        data_visualization/AxisLockButtonItem.h data_visualization/AxisLockButtonItem.cpp
+        data_visualization/SaveImageButtonItem.h data_visualization/SaveImageButtonItem.cpp
+        data_visualization/AxisAutoAdjustButton.h data_visualization/AxisAutoAdjustButton.cpp
+        data_visualization/AxiTypeSwitchButton.h data_visualization/AxiTypeSwitchButton.cpp
+
 
     )
 # Define target properties for Android with Qt 6 as:
@@ -160,9 +171,14 @@ target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${Q
 target_link_libraries(SeekCytometer PRIVATE Qt6::Core)
 target_link_libraries(SeekCytometer PRIVATE Qt6::Core)
 target_link_libraries(SeekCytometer PRIVATE Qt6::Core)
+target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Core)
+target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Core)
+target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Core)
+target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Core)
+target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Core)
 
 # FOR DEBUG
-target_compile_definitions(SeekCytometer PRIVATE ENABLE_DEBUG=0)
+target_compile_definitions(SeekCytometer PRIVATE ENABLE_DEBUG=1)
 
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

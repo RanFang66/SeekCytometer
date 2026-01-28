@@ -5,21 +5,32 @@
 #include <QFont>
 #include <QFontMetrics>
 
+struct AxisTick
+{
+    double value;     // 实际数值
+    bool isMajor;     // 是否主刻度（10^n）
+};
+
 class CustomAxis : public QObject
 {
 public:
     enum ScaleType { Linear, Logarithmic };
 
 
-    explicit CustomAxis(QObject *parent = nullptr);
+    explicit CustomAxis(QObject *parent = nullptr, double minVal = -10000.0, double maxVal = 1000000.0);
 
-    void setRange(double min, double max) { m_minValue = min; m_maxValue = max;};
+    void setRange(double min, double max); // { m_minValue = min; m_maxValue = max;};
     void setTicks(int numTicks) { m_numTicks = numTicks; };
-    void setScaleType(ScaleType type) { m_scaleType = type; };
+    void setScaleType(ScaleType type);
     void setAxisName(const QString &label) { m_title = label; };
     void setAlignment(Qt::Alignment alignment);
     void setTitleFont(const QFont &font);
     void setTickLabelFont(const QFont &font);
+
+    double mapValueToRatio(double value) const;   // 0~1
+    double mapRatioToValue(double ratio) const;
+    bool isLog() const { return m_scaleType == Logarithmic; }
+
 
     Qt::Orientation orientation() const { return m_orientation; }
     Qt::Alignment alignment() const { return m_alignment; }
@@ -35,10 +46,12 @@ public:
     double axisTitleHeight() const { return m_axisTitleHeight; }
     qreal range() const {return (m_maxValue - m_minValue); }
 
+    QList<AxisTick> generateLogTicks() const;
 
 private:
     static constexpr int        AXIS_TITLE_MARGIN = 10;
     static constexpr int        AXIS_TICK_MARGIN = 10;
+
     Qt::Orientation         m_orientation;
     Qt::Alignment           m_alignment;
     double                  m_minValue;
@@ -52,6 +65,10 @@ private:
     int                     m_axisTitleHeight;
     int                     m_axisTickHeight;
     int                     m_axisHeight;
+
+    double                     m_minLimit;
+    double                     m_maxLimit;
 };
+
 
 #endif // CUSTOMAXIS_H

@@ -2,5 +2,11 @@
     <qresource prefix="/">
         <file>seekgene.ico</file>
         <file>resource/images/seekgene_logo.jpg</file>
+        <file>resource/images/icons/file_locked.png</file>
+        <file>resource/images/icons/filesaveas.png</file>
+        <file>resource/images/icons/view_nofullscreen.png</file>
+        <file>resource/images/icons/auto_adjust.png</file>
+        <file>resource/images/icons/linear_axis.png</file>
+        <file>resource/images/icons/log_axis.png</file>
     </qresource>
 </RCC>

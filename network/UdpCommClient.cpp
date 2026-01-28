@@ -277,7 +277,7 @@ void UdpCommClient::parseHandshakeFrame(const QByteArray &data)
     QDataStream stream(data);
     quint8 state;
     stream >> state;
-    qDebug() << "[UdpCommClient] Handshake frame received " << "Current Cytometer state:" << state;
+    //qDebug() << "[UdpCommClient] Handshake frame received " << "Current Cytometer state:" << state;
 }
 
 
@@ -321,10 +321,12 @@ void UdpCommClient::parseEventData(const QByteArray &data)
         timeSpanBuff += eventData.getDiffTimeUs();
         eventDataBuffer.append(eventData);
     }
-    double timeSpan = (double)timeSpanBuff / validEventNum;
+
+
+
 
     if (eventNum != validEventNum) {
-        qDebug() << "Received " << eventNum << " Events Data" << validEventNum << "Valid";
+        qDebug() << "Received " << eventNum << " Events Data" << validEventNum << "Valid" << data.first(4) << data.last(4);
     }
 
     // QDataStream stream(data);
@@ -334,6 +336,10 @@ void UdpCommClient::parseEventData(const QByteArray &data)
     //     eventDataBuffer.append(eventData);
     // }
 
+    if (validEventNum == 0) {
+        return;
+    }
+    double timeSpan = (double)timeSpanBuff / validEventNum;
     emit eventDataReady(eventDataBuffer, enableSortNum, sortedNum, timeSpan);
 }
 

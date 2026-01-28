@@ -21,6 +21,9 @@ public:
     bool isRealSorted() const;
     bool isValidSpeedMeasure() const;
 
+    const QVector<int> &getEnabledChannels() const;
+
+
     bool isValidEvent() const;
     int getEventId() const;
     quint32 getDiffTimeUs() const;
@@ -46,6 +49,8 @@ private:
     bool                    isValidData;
     QVector<int>            enabledChannels;
     QVector<QVector<int>>   data;
+
+    QHash<int, int>         channelIndexMap;
 };
 
 Q_DECLARE_METATYPE(EventData)
@@ -69,10 +74,7 @@ inline int EventData::getArea(int channelId) const
     return data[enabledChannels.indexOf(channelId)].at(static_cast<int>(MeasurementType::Area));
 }
 
-inline int EventData::getData(int channelId, MeasurementType type) const
-{
-    return data[enabledChannels.indexOf(channelId)].at(static_cast<int>(type));
-}
+
 
 inline bool EventData::isEnabledSort() const
 {
@@ -87,6 +89,11 @@ inline bool EventData::isRealSorted() const
 inline bool EventData::isValidSpeedMeasure() const
 {
     return isValidMeasure;
+}
+
+inline const QVector<int> &EventData::getEnabledChannels() const
+{
+    return enabledChannels;
 }
 
 inline int EventData::getEventId() const
@@ -109,10 +116,7 @@ inline void EventData::setEventId(int id)
     eventId = id;
 }
 
-inline void EventData::setData(int channelId, MeasurementType type, int val)
-{
-    data[enabledChannels.indexOf(channelId)][static_cast<int>(type)] = val;
-}
+
 
 inline void EventData::setEnableSort(bool enabled)
 {

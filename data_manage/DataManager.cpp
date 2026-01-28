@@ -134,7 +134,7 @@ void DataManager::processHistogramData(PlotBase *plot, const QVector<SampleData>
     int measurementXIndex = m_measurementTypesPerChannel.at(channelXIndex).indexOf(xType);
     if (measurementXIndex < 0) return;
 
-    QVector<double> histogram(data.size(), 0);
+    QVector<int> histogram(data.size(), 0);
     for (int i = 0; i < data.size(); ++i) {
         histogram[i] = data.at(i).at(channelXIndex).at(measurementXIndex);
     }
@@ -159,9 +159,9 @@ void DataManager::processScatterData(PlotBase *plot, const QVector<SampleData> &
     int measurementYIndex = m_measurementTypesPerChannel.at(channelYIndex).indexOf(yType);
     if (measurementXIndex < 0 || measurementYIndex < 0) return;
 
-    QVector<QPointF> scatterData(data.size());
+    QVector<QPoint> scatterData(data.size());
     for (int i = 0; i < data.size(); ++i) {
-        scatterData[i] = QPointF(data.at(i).at(channelXIndex).at(measurementXIndex),
+        scatterData[i] = QPoint(data.at(i).at(channelXIndex).at(measurementXIndex),
                                  data.at(i).at(channelYIndex).at(measurementYIndex));
     }
     scatterPlot->updateData(scatterData);

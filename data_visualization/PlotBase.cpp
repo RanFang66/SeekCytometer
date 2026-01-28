@@ -5,12 +5,21 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QMenu>
 #include <QAction>
+#include <QFileDialog>
+#include <QImage>
+#include <QApplication>
+
+
 #include "GateItem.h"
 #include "WorkSheetScene.h"
 
+#include "AxisLockButtonItem.h"
+#include "SaveImageButtonItem.h"
+#include "AxisAutoAdjustButton.h"
+#include "AxiTypeSwitchButton.h"
 
 PlotBase::PlotBase(const Plot &plot, QGraphicsItem *parent)
-: QGraphicsObject{parent}, m_plot{plot}
+    : QGraphicsObject{parent}, m_plot{plot}, m_axisUnlocked(false)
 {
     setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable | ItemClipsToShape);
 
@@ -26,7 +35,25 @@ PlotBase::PlotBase(const Plot &plot, QGraphicsItem *parent)
     m_title = m_plot.plotName();
     m_titleFont = QFont("Arial", 12);
 
-    m_boundingRect = QRectF(0, 0, 450, 450);
+    m_boundingRect = QRectF(0, 0, 480, 480);
+
+    AxisLockButtonItem *axisLockButton = new AxisLockButtonItem(this);
+    axisLockButton->setPos(m_boundingRect.right()-25, m_boundingRect.top() + 5);
+
+    SaveImageButtonItem *saveButton = new SaveImageButtonItem(this);
+    saveButton->setPos(m_boundingRect.right()- 75, m_boundingRect.top() + 5);
+
+    AxisAutoAdjustButton *autoButton = new AxisAutoAdjustButton(this);
+    autoButton->setPos(m_boundingRect.right() - 50, m_boundingRect.top() + 5);
+
+    AxiTypeSwitchButton *axisTypeButton = new AxiTypeSwitchButton(this);
+    axisTypeButton->setPos(m_boundingRect.right() - 100, m_boundingRect.top() + 5);
+
+    setAcceptHoverEvents(true);
+    setAcceptedMouseButtons(Qt::LeftButton | Qt::RightButton);
+    setFlag(QGraphicsItem::ItemIsFocusable);
+    setAcceptHoverEvents(true);
+
     updateLayout();
 }
 
@@ -108,34 +135,113 @@ void PlotBase::paintAxis(QPainter *painter)
 
 
     // Draw X Axis
-    int xTickNum = m_xAxis->numTicks();
-    if (xTickNum <= 0) {
-        xTickNum = 5;
-    }
-    double xTickInterval = m_xAxis->range() / xTickNum;
-    qreal xRatio = m_plotArea.width() / m_xAxis->range();
-    for (int i = 0; i <= xTickNum; i++) {
-        double val = m_xAxis->minValue() + i * xTickInterval;
-        qreal posX = m_plotArea.left() + (val - m_xAxis->minValue()) * xRatio;
-        painter->drawLine(QPointF(posX, m_axisXArea.top()), QPointF(posX, m_axisXArea.top() + 8));
-        painter->drawText(QRectF(posX - 25, m_axisXArea.top() + 8, 50, 20), Qt::AlignCenter, QString::number((int)val));
-    }
+    // ================= X Axis =================
+    if (m_xAxis->scaleType() == CustomAxis::Logarithmic) {
 
-    // Draw X Axis Title Under the Axis
-    painter->drawText(QRectF(m_axisXArea.left(), m_axisXArea.top() + 20, m_axisXArea.width(), m_axisXArea.height()-20), Qt::AlignCenter, m_xAxis->axisName());
+        QList<AxisTick> ticks = m_xAxis->generateLogTicks();
+
+        for (const AxisTick &tick : std::as_const(ticks)) {
+            double ratio = m_xAxis->mapValueToRatio(tick.value);
+            qreal x = m_plotArea.left() + ratio * m_plotArea.width();
+
+            if (tick.isMajor) {
+                painter->drawLine(
+                    QPointF(x, m_axisXArea.top()),
+                    QPointF(x, m_axisXArea.top() + 10)
+                    );
+
+                QString label = QString("10^%1")
+                                    .arg(int(std::round(std::log10(tick.value))));
+
+                painter->drawText(
+                    QRectF(x - 30, m_axisXArea.top() + 12, 60, 20),
+                    Qt::AlignCenter,
+                    label
+                    );
+            } else {
+                painter->drawLine(
+                    QPointF(x, m_axisXArea.top()),
+                    QPointF(x, m_axisXArea.top() + 5)
+                    );
+            }
+        }
+
+    } else {
+        int xTickNum = m_xAxis->numTicks();
+        if (xTickNum <= 0) xTickNum = 5;
+
+        for (int i = 0; i <= xTickNum; ++i) {
+            double ratio = double(i) / xTickNum;
+            double val = m_xAxis->mapRatioToValue(ratio);
+            qreal x = m_plotArea.left() + ratio * m_plotArea.width();
+
+            painter->drawLine(
+                QPointF(x, m_axisXArea.top()),
+                QPointF(x, m_axisXArea.top() + 8)
+                );
+
+            painter->drawText(
+                QRectF(x - 25, m_axisXArea.top() + 8, 50, 20),
+                Qt::AlignCenter,
+                QString::number(val, 'f', 0)
+                );
+        }
+    }
 
     // Draw Y Axis
-    int yTickNum = m_yAxis->numTicks();
-    if (yTickNum <= 0) {
-        yTickNum = 5;
-    }
-    double yTickInterval = m_yAxis->range() / yTickNum;
-    qreal yRatio = m_plotArea.height() / m_yAxis->range();
-    for (int i = 0; i <= yTickNum; i++) {
-        double val = m_yAxis->minValue() + i * yTickInterval;
-        qreal posY = m_plotArea.bottom() - (val - m_yAxis->minValue()) * yRatio;
-        painter->drawLine(QPointF(m_axisYArea.right(), posY), QPointF(m_axisYArea.right() - 8, posY));
-        painter->drawText(QRectF(m_axisYArea.right() - 60, posY - 15, 60, 20), Qt::AlignCenter, QString::number((int)val));
+    if (m_yAxis->scaleType() == CustomAxis::Logarithmic) {
+
+        QList<AxisTick> ticks = m_yAxis->generateLogTicks();
+
+        for (const AxisTick &tick : std::as_const(ticks)) {
+            double ratio = m_yAxis->mapValueToRatio(tick.value);
+            qreal y = m_plotArea.bottom() - ratio * m_plotArea.height();
+
+            if (tick.isMajor) {
+                // 主刻度
+                painter->drawLine(
+                    QPointF(m_axisYArea.right(), y),
+                    QPointF(m_axisYArea.right() - 10, y)
+                    );
+
+                QString label = QString("10^%1")
+                                    .arg(int(std::round(std::log10(tick.value))));
+
+                painter->drawText(
+                    QRectF(m_axisYArea.right() - 70, y - 10, 60, 20),
+                    Qt::AlignRight | Qt::AlignVCenter,
+                    label
+                    );
+            } else {
+                // 次刻度
+                painter->drawLine(
+                    QPointF(m_axisYArea.right(), y),
+                    QPointF(m_axisYArea.right() - 5, y)
+                    );
+            }
+        }
+
+    } else {
+        // ========= 线性轴 =========
+        int yTickNum = m_yAxis->numTicks();
+        if (yTickNum <= 0) yTickNum = 5;
+
+        for (int i = 0; i <= yTickNum; ++i) {
+            double ratio = double(i) / yTickNum;
+            double val = m_yAxis->mapRatioToValue(ratio);
+            qreal y = m_plotArea.bottom() - ratio * m_plotArea.height();
+
+            painter->drawLine(
+                QPointF(m_axisYArea.right(), y),
+                QPointF(m_axisYArea.right() - 8, y)
+                );
+
+            painter->drawText(
+                QRectF(m_axisYArea.right() - 60, y - 10, 60, 20),
+                Qt::AlignCenter,
+                QString::number(val, 'f', 0)
+                );
+        }
     }
 
     // Draw Y Axis Title At the Left of the Axis in Vertical Direction
@@ -178,46 +284,54 @@ void PlotBase::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 
 qreal PlotBase::mapValueToXAixs(qreal value) const
 {
-    return m_plotArea.left() + (value - m_xAxis->minValue()) * (m_plotArea.width() / m_xAxis->range());
+    double ratio = m_xAxis->mapValueToRatio(value);
+    return m_plotArea.left() + ratio * m_plotArea.width();
 }
 
 qreal PlotBase::mapValueToYAixs(qreal value) const
 {
-    return m_plotArea.bottom() - (value - m_yAxis->minValue()) * (m_plotArea.height() / m_yAxis->range());
+    double ratio = m_yAxis->mapValueToRatio(value);
+    return m_plotArea.bottom() - ratio * m_plotArea.height();
 }
 
-qreal PlotBase::mapXAxisToValue(qreal value) const
+qreal PlotBase::mapXAxisToValue(qreal x) const
 {
-    return m_xAxis->minValue() + (value - m_plotArea.left()) * (m_xAxis->range() / m_plotArea.width());
+    double ratio = (x - m_plotArea.left()) / m_plotArea.width();
+    return m_xAxis->mapRatioToValue(ratio);
 }
 
 
-qreal PlotBase::mapYAxisToValue(qreal value) const
+qreal PlotBase::mapYAxisToValue(qreal y) const
 {
-    return m_yAxis->minValue() + (m_plotArea.bottom() - value) * (m_yAxis->range() / m_plotArea.height());
+    double ratio = (m_plotArea.bottom() - y) / m_plotArea.height();
+    return m_yAxis->mapRatioToValue(ratio);
 }
 
 QPointF PlotBase::mapPointToPlotArea(const QPointF &point) const
 {
-    QPointF mappedPoint;
-    mappedPoint.setX(m_plotArea.left() + (point.x() - m_xAxis->minValue()) * (m_plotArea.width() / m_xAxis->range()));
-    mappedPoint.setY(m_plotArea.bottom() - (point.y() - m_yAxis->minValue()) * (m_plotArea.height() / m_yAxis->range()));
-    return mappedPoint;
+
+    return QPointF(mapValueToXAixs(point.x()), mapValueToYAixs(point.y()));
+    // QPointF mappedPoint;
+    // mappedPoint.setX(m_plotArea.left() + (point.x() - m_xAxis->minValue()) * (m_plotArea.width() / m_xAxis->range()));
+    // mappedPoint.setY(m_plotArea.bottom() - (point.y() - m_yAxis->minValue()) * (m_plotArea.height() / m_yAxis->range()));
+    // return mappedPoint;
 }
 
 
 
 QPointF PlotBase::mapPointToPlotArea(qreal x, qreal y) const
 {
-    return mapPointToPlotArea(QPointF(x, y));
+    return QPointF(mapValueToXAixs(x), mapValueToYAixs(y));
+    // return mapPointToPlotArea(QPointF(x, y));
 }
 
 QPointF PlotBase::mapPlotAreaToPoint(const QPointF &point) const
 {
-    QPointF mappedPoint;
-    mappedPoint.setX(m_xAxis->minValue() + (point.x() - m_plotArea.left()) * (m_xAxis->range() / m_plotArea.width()));
-    mappedPoint.setY(m_yAxis->minValue() + (m_plotArea.bottom() - point.y()) * (m_yAxis->range() / m_plotArea.height()));
-    return mappedPoint;
+    return QPointF(mapXAxisToValue(point.x()), mapYAxisToValue(point.y()));
+    // QPointF mappedPoint;
+    // mappedPoint.setX(m_xAxis->minValue() + (point.x() - m_plotArea.left()) * (m_xAxis->range() / m_plotArea.width()));
+    // mappedPoint.setY(m_yAxis->minValue() + (m_plotArea.bottom() - point.y()) * (m_yAxis->range() / m_plotArea.height()));
+    // return mappedPoint;
 }
 
 QRectF PlotBase::mapRectToPlotArea(const QRectF &rect) const
@@ -264,6 +378,7 @@ QPointF PlotBase::limitScenePointInPlot(const QPointF &pointInScene) const
     return mapToScene(limitedPoint);
 }
 
+
 void PlotBase::updateAxisRange(int xMin, int xMax, int yMin, int yMax)
 {
     int xMinVal = m_xAxis->minValue() > xMin ? xMin : m_xAxis->minValue();
@@ -295,6 +410,57 @@ void PlotBase::updateAxisRanges(const Gate &gate)
     m_yAxis->setRange(minY, maxY);
 }
 
+void PlotBase::setAxisUnlocked(bool unlocked)
+{
+    if (m_axisUnlocked == unlocked)
+        return;
+
+    m_axisUnlocked = unlocked;
+    update();
+}
+
+bool PlotBase::isAxisUnlocked() const
+{
+    return m_axisUnlocked;
+}
+
+void PlotBase::saveToImage()
+{
+    QString defaultName;
+    if (m_title.isEmpty()) {
+        defaultName = QString("plot-%1.png").arg(QDateTime::currentDateTime().toString("yyyyMMddhhmmss"));
+    } else {
+        defaultName = QString("%1-%2.png").arg(m_title, QDateTime::currentDateTime().toString("yyyyMMddhhmmss"));
+    }
+    QString fileName = QFileDialog::getSaveFileName(
+        nullptr,
+        tr("Save Plot As Image"),
+        defaultName,
+        tr("PNG Image (*.png);; JPEG Image (*.jpg)")
+        );
+
+    if (fileName.isEmpty()) {
+        return;
+    }
+
+    qreal dpr = qApp->devicePixelRatio();
+    QSize imageSize = m_boundingRect.size().toSize() * dpr;
+    QImage image(imageSize, QImage::Format_ARGB32_Premultiplied);
+    image.setDevicePixelRatio(dpr);
+    image.fill(Qt::white);
+
+    QPainter painter(&image);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setRenderHint(QPainter::TextAntialiasing);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
+
+    painter.translate(-m_boundingRect.topLeft());
+    this->paint(&painter, nullptr, nullptr);
+
+    painter.end();
+    image.save(fileName);
+}
+
 
 QRectF PlotBase::boundingRect() const
 {
@@ -324,7 +490,57 @@ void PlotBase::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
     paintTitle(painter);
     paintAxis(painter);
     paintPlot(painter);
+    drawCursorValue(painter);
 }
+
+void PlotBase::drawCursorValue(QPainter *painter)
+{
+    if (!m_showCursorValue)
+        return;
+
+    const int margin = 6;
+    const int padding = 4;
+
+    QString text = QString("X = %1\nY = %2")
+                       .arg(m_cursorValue.x(), 0, 'f', 2)
+                       .arg(m_cursorValue.y(), 0, 'f', 2);
+
+    QFontMetrics fm(painter->font());
+    QRect textRect = fm.boundingRect(QRect(0, 0, 200, 50),
+                                     Qt::AlignLeft | Qt::AlignTop,
+                                     text);
+
+    QRectF bgRect(
+        m_boundingRect.left() + margin,
+        m_boundingRect.bottom() - textRect.height() - margin - 10,
+        textRect.width() + padding * 2,
+        textRect.height() + padding * 2
+        );
+
+    // 背景
+    painter->setPen(Qt::NoPen);
+    painter->setBrush(QColor(0, 0, 0, 120));
+    painter->drawRect(bgRect);
+
+    // 文本
+    painter->setPen(Qt::white);
+    painter->drawText(
+        bgRect.adjusted(padding, padding, -padding, -padding),
+        Qt::AlignLeft | Qt::AlignTop,
+        text
+        );
+}
+
+
+
+
+
+
+
+
+
+
+
 
 // void PlotBase::mousePressEvent(QGraphicsSceneMouseEvent *event)
 // {

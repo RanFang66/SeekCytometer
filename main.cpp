@@ -5,7 +5,11 @@
 #include <QSplashScreen>
 #include <QTranslator>
 #include <QScreen>
+#include <QDateTime>
+#include <QDir>
 
+
+#include "Logger.h"
 #include "LoginDialog.h"
 
 int main(int argc, char *argv[])
@@ -14,7 +18,21 @@ int main(int argc, char *argv[])
 
     // QApplication::setAttribute(Qt::AA_UseStyleSheetPropagationInWidgetStyles, false);
 
+    QString logName = QString("%1.log").arg(QDateTime::currentDateTime().toString("yyyyMMddhhmmss"));
+    QDir saveDir("./logs");
+    if (!saveDir.exists()) {
+        if (saveDir.mkpath(".")) {
+            qDebug() << "Created logs directory ok";
+        } else {
+            qDebug() << "Created logs directory  failed!";
+        }
+    }
 
+#ifdef QT_DEBUG
+    Logger::init("./logs/" + logName, true, true);
+#else
+    Logger::init("./logs/" + logName, false, true);
+#endif
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
